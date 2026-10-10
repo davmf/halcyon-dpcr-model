@@ -1,0 +1,31 @@
+[project]
+name = "halcyon-dpcr-model"
+version = "0.1.0"
+description = "Halcyon dPCR-24 example: SysML v2 model, StrictDoc UI, Salabim simulation and design verification (AI-104 Option C)"
+requires-python = ">=3.15"
+dependencies = [
+    "salabim==26.0.8",
+    # Undeclared Salabim dependency, required.
+    "greenlet",
+    "textx>=4,<5",
+    "numpy",
+    "matplotlib",
+    "pillow",
+    "opencv-python-headless",
+    # Installed editable from the local checkout at /home/david/strictdoc, branch david/sysml-format; see README.
+    "strictdoc",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 80
+# ruff may not know py315 yet; if ruff complains, note it.
+target-version = "py314"
