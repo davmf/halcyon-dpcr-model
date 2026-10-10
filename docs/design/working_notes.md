@@ -22,10 +22,21 @@ Developer Guide and the files in this repository and in the StrictDoc branch
 - SysML v2 Pilot Implementation 0.62.0 (release `2026-08`):
   - jar: `/home/david/.cache/sysml-pilot/0.62.0/sysml/jupyter-sysml-kernel-0.62.0-all.jar`
   - library: `/home/david/.cache/sysml-pilot/0.62.0/sysml/sysml.library/`
-  - `org.omg.sysml.interactive.SysMLInteractive` reads stdin, one line per
-    cell. The standard library was not loaded in a first probe (errors
-    such as "Couldn't resolve reference to Type 'Real'"). Loading it is
-    open work.
+  - `SysMLInteractive.main(args)` calls `loadLibrary(args[0])` and
+    `setApiBasePath(args[1])`. Pass the library directory as the first
+    argument. Without it no library loads. On stdin, a line `%` starts a
+    multi-line cell that ends at a line `%%`. Cells resolve only against
+    earlier cells.
+  - The conformance gate avoids the REPL. `tools/PilotCheck.java` runs in
+    Java source-launch mode against the jar API. It calls `loadLibrary`,
+    then `readResource` + `addInputResource` per file, `EcoreUtil.resolveAll`,
+    and the Xtext `IResourceValidator` (`CheckMode.ALL`) per file. Issues
+    keep their real file, line and column. Forward references between
+    files resolve.
+  - Gate command (what `tools/sysml_conformance.py` runs):
+    `java -cp <pilot>/jupyter-sysml-kernel-0.62.0-all.jar
+    tools/PilotCheck.java <pilot>/sysml.library <file.sysml>...`.
+    About 12 s per run, mostly library loading.
 - Java 21: `/usr/bin/java`.
 
 ## Status
@@ -43,3 +54,6 @@ Developer Guide and the files in this repository and in the StrictDoc branch
   conformance gate.
 - SysML format is opt-in via `strictdoc_config.py`, not a default format.
 - Design packages are read only in StrictDoc (`autogen`).
+- 2026-10-11: Conformance gate validates through the Pilot's Java API
+  (`tools/PilotCheck.java`), not the stdin REPL. All files share one
+  resource set, so file order does not matter.
