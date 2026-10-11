@@ -6,22 +6,20 @@ model (see generator/loader.py). Every value and allocation is copied from
 model/design/*.sysml and model/library/SimLib.sysml. Test-only: the
 generator itself must not depend on this module.
 
-Known deviation: the model has no assignment that sets `sample.invalid`.
-`markInvalid` gets an assignment here, because its name and the invalid
-rate in docs/design/capacity_estimate.md assume that it marks the sample.
+Updated to the model of 2026-10-11 (invalid draw at readout, analysis
+computer, high-throughput batch scenario). Invalid results come from the
+readout draw, so the fixture has no item flag and no assignment.
 See the report in docs/design/working_notes.md.
 """
 
 from generator.ir import (
     Arrivals,
-    Assignment,
     BatchArrivals,
     BernoulliGuard,
     Binary,
     Branch,
     CalcDef,
     Call,
-    ConditionGuard,
     Decision,
     Distribution,
     Duration,
@@ -41,7 +39,6 @@ from generator.ir import (
     Scenario,
     SimulationVerification,
     Step,
-    Unary,
 )
 
 MINUTE = 60.0
@@ -172,7 +169,7 @@ def _step(
     allocations: tuple[str, ...] = (),
     consumes: int = 0,
     retest: bool = False,
-    assignments: tuple[Assignment, ...] = (),
+    assignments: tuple = (),
 ) -> Step:
     return Step(
         name=name,
@@ -214,7 +211,14 @@ def _nodes() -> dict[str, Node]:
         channels=_ref("imagers.channels"),
         timePerChannel=_ref("imagers.timePerChannel"),
     )
-    invalid = "sample.invalid"
+    # Invalid partitions are drawn at readout with pLowDroplets squared.
+    invalid_draw = BernoulliGuard(
+        Binary("*", _ref("pLowDroplets"), _ref("pLowDroplets"))
+    )
+    not_invalid_draw = BernoulliGuard(
+        Binary("*", _ref("pLowDroplets"), _ref("pLowDroplets")),
+        negated=True,
+    )
     bubble = BernoulliGuard(_ref("pBubble"))
     not_bubble = BernoulliGuard(_ref("pBubble"), negated=True)
     low = BernoulliGuard(_ref("pLowDroplets"))
@@ -318,11 +322,11 @@ def _nodes() -> dict[str, Node]:
         _step(
             "generate",
             Duration(Distribution.FIXED, generation),
-            ("lowCount1",),
+            ("lowCount",),
             ("generators", "pneumatics"),
         ),
         Decision(
-            "lowCount1",
+            "lowCount",
             (
                 Branch(low, "regenerate"),
                 Branch(not_low, "partitioned"),
@@ -331,21 +335,8 @@ def _nodes() -> dict[str, Node]:
         _step(
             "regenerate",
             Duration(Distribution.FIXED, generation),
-            ("lowCount2",),
-            ("generators", "pneumatics"),
-        ),
-        Decision(
-            "lowCount2",
-            (
-                Branch(low, "markInvalid"),
-                Branch(not_low, "partitioned"),
-            ),
-        ),
-        _step(
-            "markInvalid",
-            _fixed(0.0),
             ("partitioned",),
-            assignments=(Assignment(invalid, _lit(1.0)),),
+            ("generators", "pneumatics"),
         ),
         Merge("partitioned", ("transferToAmplification",)),
         _step(
@@ -373,15 +364,17 @@ def _nodes() -> dict[str, Node]:
             ("poissonAnalysis",),
             ("imagers",),
         ),
-        _step("poissonAnalysis", _fixed(60.0), ("invalidCheck",)),
+        _step(
+            "poissonAnalysis",
+            _fixed(60.0),
+            ("invalidCheck",),
+            ("analysisComputer",),
+        ),
         Decision(
             "invalidCheck",
             (
-                Branch(ConditionGuard(_ref(invalid)), "reflexRetest"),
-                Branch(
-                    ConditionGuard(Unary("not", _ref(invalid))),
-                    "report",
-                ),
+                Branch(invalid_draw, "reflexRetest"),
+                Branch(not_invalid_draw, "report"),
             ),
         ),
         _step("reflexRetest", _fixed(0.0), (), (), retest=True),
@@ -422,6 +415,7 @@ def _resources(
             refill_size=96,
             refill_duration_s=15 * MINUTE,
         ),
+        "analysisComputer": ResourceSpec("analysisComputer", unit, capacity=1),
         "wasteStore": ResourceSpec(
             "wasteStore", ResourceKind.STORE, initial_level=0
         ),
@@ -486,6 +480,13 @@ def _scenarios() -> dict[str, Scenario]:
         ),
         "baseSteady": _scenario("baseSteady", steady, 0.1, HOUR, base),
         "highThroughput": _scenario("highThroughput", steady, 0.1, HOUR, high),
+        "highThroughputBatch": _scenario(
+            "highThroughputBatch",
+            BatchArrivals(count=24, time_s=0.0),
+            0.0,
+            0.0,
+            high,
+        ),
     }
 
 
@@ -557,50 +558,74 @@ def _requirements() -> dict[str, Requirement]:
 
 
 def _verifications() -> tuple[SimulationVerification, ...]:
-    return (
-        SimulationVerification(
+    """The six base cases of the model, with the model's element names."""
+    cases = [
+        (
+            "verSysThr001",
             "SYS-THR-001",
             "measuredSamplesPerShift",
             MetricKind.COMPLETED_PER_SHIFT,
             "baseSteady",
             8 * HOUR,
+            None,
         ),
-        SimulationVerification(
+        (
+            "verSysUtl001",
             "SYS-UTL-001",
             "measuredImagerUtilisation",
             MetricKind.UTILISATION,
             "baseSteady",
             8 * HOUR,
-            resource="imagers",
+            "imagers",
         ),
-        SimulationVerification(
+        (
+            "verSysTat001",
             "SYS-TAT-001",
             "measuredTimeToFirstResult",
             MetricKind.TIME_TO_FIRST_RESULT,
             "baseBatch",
             3 * HOUR,
+            None,
         ),
-        SimulationVerification(
+        (
+            "verSysTat002",
             "SYS-TAT-002",
             "measuredMeanTurnaround",
             MetricKind.MEAN_TURNAROUND,
             "baseSteady",
             16 * HOUR,
+            None,
         ),
-        SimulationVerification(
+        (
+            "verSysTat003",
             "SYS-TAT-003",
             "measuredMeanStatTurnaround",
             MetricKind.MEAN_STAT_TURNAROUND,
             "baseSteady",
             16 * HOUR,
+            None,
         ),
-        SimulationVerification(
+        (
+            "verSysVal001",
             "SYS-VAL-001",
             "measuredInvalidRate",
             MetricKind.INVALID_RATE,
             "baseSteady",
             16 * HOUR,
+            None,
         ),
+    ]
+    return tuple(
+        SimulationVerification(
+            case_id=case_id,
+            requirement_uid=uid,
+            measured_name=measured,
+            metric=metric,
+            scenario=scenario,
+            horizon_s=horizon,
+            resource=resource,
+        )
+        for case_id, uid, measured, metric, scenario, horizon, resource in cases
     )
 
 

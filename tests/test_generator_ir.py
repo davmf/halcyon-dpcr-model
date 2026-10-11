@@ -62,4 +62,4 @@ def test_validate_rejects_dangling_successor() -> None:
 def test_join_inputs_count_incoming_successions() -> None:
     model = build_model()
     assert model.join_inputs("joined") == 2
-    assert model.join_inputs("partitioned") == 3
+    assert model.join_inputs("partitioned") == 2
