@@ -327,6 +327,7 @@ class Requirement:
 class SimulationVerification:
     """One simulated check of a requirement under one scenario."""
 
+    case_id: str
     requirement_uid: str
     measured_name: str
     metric: MetricKind

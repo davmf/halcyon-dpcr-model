@@ -246,3 +246,23 @@ def most_likely_path_seconds(
 
     total, _ = walk(model.start)
     return total
+
+
+def retest_probability(model: ir.Model, scenario: ir.Scenario) -> float:
+    """Probability that one run ends in a retest step (no retests counted)."""
+    visits = expected_visits(model, scenario)
+    return sum(
+        visits[name]
+        for name, node in model.nodes.items()
+        if isinstance(node, Step) and node.retest
+    )
+
+
+def invalid_rate(model: ir.Model, scenario: ir.Scenario) -> float:
+    """Share of samples that stay without a result after every retest.
+
+    Each run ends in a retest with probability q. A sample is INVALID when
+    all its runs (the first and maxRetests retests) end in a retest step.
+    """
+    q = retest_probability(model, scenario)
+    return q ** (scenario.max_retests + 1)

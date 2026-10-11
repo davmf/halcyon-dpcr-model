@@ -938,6 +938,7 @@ class ModelLoader:
         ):
             raise LoaderError(f"incomplete verification: {element.name}")
         return ir.SimulationVerification(
+            case_id=element.short_name or element.name or "",
             requirement_uid=uid,
             measured_name=measured,
             metric=metric,
