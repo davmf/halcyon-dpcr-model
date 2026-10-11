@@ -40,7 +40,7 @@ from verification.core import (
 )
 
 MODEL_DIR = REPO_ROOT / "model"
-RESULTS_DIR = REPO_ROOT / "build" / "results"
+RESULTS_DIR = REPO_ROOT / "reports" / "junit"
 JUNIT_PATH = RESULTS_DIR / "halcyon-verification.pytest.junit.xml"
 LAYERS = (
     ("layer1", "verification.layer1_model"),
