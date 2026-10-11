@@ -40,6 +40,7 @@ verification/    layers 1-4 and the JUnit writer
 tools/           run.py CLI, PilotCheck.java, sysml_conformance.py
 tests/           pytest (generator, fixtures)
 docs/design/     conventions, capacity estimate, working notes
+docs/images/     sample plots (PNG and SVG) used in the docs
 build/           generated output (git-ignored)
 ```
 
@@ -74,6 +75,28 @@ StrictDoc export (test-report page at
 ```sh
 .venv/bin/strictdoc export . --output-dir build/strictdoc --config strictdoc_config.py
 ```
+
+## Example output
+
+Sample plots from `tools/run.py plots` (seed 1, scenario `baseSteady`).
+Each is also available as SVG in `docs/images/`. Regenerate the originals
+into `build/plots/` and copy them over to refresh these.
+
+![Cartridge Gantt chart, baseSteady](docs/images/gantt-baseSteady.png)
+
+Each row is one cartridge. Blue bars are extraction-station steps, orange
+the thermal block, green the imager. The long orange bars show the thermal
+blocks as the bottleneck.
+
+![Utilisation per resource, baseSteady](docs/images/utilisation-baseSteady.png)
+
+![Throughput per shift by scenario](docs/images/scenario-comparison.png)
+
+![Turnaround histogram, baseSteady](docs/images/turnaround-baseSteady.png)
+
+The sample procedure as a diagram (`docs/images/process-flow.svg`):
+
+![Sample procedure: unit procedures and equipment](docs/images/process-flow.svg)
 
 ## Design verification
 

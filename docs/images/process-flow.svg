@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 330" width="1100" height="330" font-family="DejaVu Sans, Arial, sans-serif">
+<title>Sample procedure: five unit procedures and their equipment</title>
+<rect width="1100" height="330" fill="#fcfcfb"/>
+<text x="30" y="40" font-size="18" fill="#0b0b0b">Sample procedure (ISA-88): unit procedures and allocated equipment</text>
+<text x="30" y="62" font-size="12" fill="#52514e">Busy time per cartridge in each unit procedure (capacity estimate; the thermal run is per block run)</text>
+<rect x="30" y="90" width="170" height="130" rx="6" fill="#9a9892"/>
+<rect x="32.5" y="92.5" width="165" height="125" rx="4" fill="#fcfcfb"/>
+<rect x="30" y="90" width="170" height="30" rx="6" fill="#9a9892"/>
+<rect x="30" y="110" width="170" height="10" fill="#9a9892"/>
+<text x="115.0" y="111" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">intake</text>
+<text x="115.0" y="144" font-size="12" fill="#0b0b0b" text-anchor="middle">load, prime</text>
+<text x="115.0" y="188" font-size="11" fill="#52514e" text-anchor="middle">shuttle, rack,</text>
+<text x="115.0" y="203" font-size="11" fill="#52514e" text-anchor="middle">stations, pneumatics</text>
+<text x="115.0" y="244" font-size="13" fill="#0b0b0b" text-anchor="middle">about 70 s</text>
+<rect x="204" y="154.0" width="22" height="2" fill="#52514e"/>
+<polygon points="226,149.0 236,155.0 226,161.0" fill="#52514e"/>
+<rect x="238" y="90" width="170" height="130" rx="6" fill="#2a78d6"/>
+<rect x="240.5" y="92.5" width="165" height="125" rx="4" fill="#fcfcfb"/>
+<rect x="238" y="90" width="170" height="30" rx="6" fill="#2a78d6"/>
+<rect x="238" y="110" width="170" height="10" fill="#2a78d6"/>
+<text x="323.0" y="111" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">extraction</text>
+<text x="323.0" y="144" font-size="12" fill="#0b0b0b" text-anchor="middle">pipette, lyse, bind,</text>
+<text x="323.0" y="160" font-size="12" fill="#0b0b0b" text-anchor="middle">wash, elute</text>
+<text x="323.0" y="188" font-size="11" fill="#52514e" text-anchor="middle">stations, gantry,</text>
+<text x="323.0" y="203" font-size="11" fill="#52514e" text-anchor="middle">reagent store</text>
+<text x="323.0" y="244" font-size="13" fill="#0b0b0b" text-anchor="middle">1,190 s</text>
+<rect x="412" y="154.0" width="22" height="2" fill="#52514e"/>
+<polygon points="434,149.0 444,155.0 434,161.0" fill="#52514e"/>
+<rect x="446" y="90" width="170" height="130" rx="6" fill="#9a9892"/>
+<rect x="448.5" y="92.5" width="165" height="125" rx="4" fill="#fcfcfb"/>
+<rect x="446" y="90" width="170" height="30" rx="6" fill="#9a9892"/>
+<rect x="446" y="110" width="170" height="10" fill="#9a9892"/>
+<text x="531.0" y="111" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">partitioning</text>
+<text x="531.0" y="144" font-size="12" fill="#0b0b0b" text-anchor="middle">meter, generate</text>
+<text x="531.0" y="160" font-size="12" fill="#0b0b0b" text-anchor="middle">droplets</text>
+<text x="531.0" y="188" font-size="11" fill="#52514e" text-anchor="middle">generators,</text>
+<text x="531.0" y="203" font-size="11" fill="#52514e" text-anchor="middle">pneumatics</text>
+<text x="531.0" y="244" font-size="13" fill="#0b0b0b" text-anchor="middle">202 s</text>
+<rect x="620" y="154.0" width="22" height="2" fill="#52514e"/>
+<polygon points="642,149.0 652,155.0 642,161.0" fill="#52514e"/>
+<rect x="654" y="90" width="170" height="130" rx="6" fill="#eb6834"/>
+<rect x="656.5" y="92.5" width="165" height="125" rx="4" fill="#fcfcfb"/>
+<rect x="654" y="90" width="170" height="30" rx="6" fill="#eb6834"/>
+<rect x="654" y="110" width="170" height="10" fill="#eb6834"/>
+<text x="739.0" y="111" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">amplification</text>
+<text x="739.0" y="144" font-size="12" fill="#0b0b0b" text-anchor="middle">thermal cycling</text>
+<text x="739.0" y="160" font-size="12" fill="#0b0b0b" text-anchor="middle">(4 per run)</text>
+<text x="739.0" y="188" font-size="11" fill="#52514e" text-anchor="middle">thermal blocks</text>
+<text x="739.0" y="244" font-size="13" fill="#0b0b0b" text-anchor="middle">2,800 s</text>
+<rect x="828" y="154.0" width="22" height="2" fill="#52514e"/>
+<polygon points="850,149.0 860,155.0 850,161.0" fill="#52514e"/>
+<rect x="862" y="90" width="170" height="130" rx="6" fill="#1baf7a"/>
+<rect x="864.5" y="92.5" width="165" height="125" rx="4" fill="#fcfcfb"/>
+<rect x="862" y="90" width="170" height="30" rx="6" fill="#1baf7a"/>
+<rect x="862" y="110" width="170" height="10" fill="#1baf7a"/>
+<text x="947.0" y="111" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">readout</text>
+<text x="947.0" y="144" font-size="12" fill="#0b0b0b" text-anchor="middle">image 4 channels,</text>
+<text x="947.0" y="160" font-size="12" fill="#0b0b0b" text-anchor="middle">Poisson analysis</text>
+<text x="947.0" y="188" font-size="11" fill="#52514e" text-anchor="middle">imagers,</text>
+<text x="947.0" y="203" font-size="11" fill="#52514e" text-anchor="middle">analysis computer</text>
+<text x="947.0" y="244" font-size="13" fill="#0b0b0b" text-anchor="middle">240 s</text>
+<text x="30" y="316" font-size="11" fill="#52514e">Colour marks the group of the bottleneck resources: stations (blue), thermal blocks (orange), imagers (green), other (grey).</text>
+</svg>

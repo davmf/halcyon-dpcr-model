@@ -56,3 +56,24 @@ library each time.
 See `docs/design/capacity_estimate.md` for the hand calculation. The base
 configuration is limited by the thermal blocks. The high-throughput
 configuration is limited by the extraction stations.
+
+## Images in requirements
+
+A requirement `doc` comment is reST in StrictDoc, so it can embed an image.
+Put the file in an `_assets/` folder next to the `.sysml` file and reference
+it from the `doc` comment:
+
+```
+doc /*
+ * The instrument shall ...
+ *
+ * .. image:: _assets/scenario-comparison.svg
+ *    :alt: Short description
+ *    :class: image
+ */
+```
+
+`requirements/_assets/` holds the charts used by SYS-THR-001, SYS-UTL-001
+and SYS-TAT-001. They are snapshots of `tools/run.py plots` output. Design
+documents (`design/`) use plain-text markup, so an image directive there
+would show as text.

@@ -51,6 +51,11 @@ arrival rate.
 | Imager | 60% (1 imager) | 51% | 30% (2 imagers) |
 | Analysis computer | 20% | 20% | 20% |
 
+The simulated utilisation matches the table: stations near 99% and thermal
+blocks near saturation (figure from `baseSteady`, seed 1).
+
+![Utilisation per resource, baseSteady](../images/utilisation-baseSteady.png)
+
 Maximum sustainable throughput:
 
 - Base: 10.3 per hour, 82 per shift. The thermal blocks are the
@@ -93,3 +98,10 @@ Maximum sustainable throughput:
   nominal load. The simulated first result of the batch (about 150 min) is
   well above the no-queueing path (85 min). The shuttle and the shared
   stations queue the first batch. This is a finding, not a fixed defect.
+
+## Simulated results
+
+Simulated throughput per 8-hour shift against the SYS-THR-001 threshold of
+96 per shift:
+
+![Throughput per shift by scenario](../images/scenario-comparison.png)

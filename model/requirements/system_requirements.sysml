@@ -19,6 +19,10 @@ package 'Halcyon dPCR-24 system requirements' {
             doc /*
              * The instrument shall complete at least 96 samples in an
              * 8-hour shift at nominal load.
+             *
+             * .. image:: _assets/scenario-comparison.svg
+             *    :alt: Simulated throughput per shift against the 96 threshold
+             *    :class: image
              */
             attribute requiredSamplesPerShift : Real = 96;
             attribute measuredSamplesPerShift : Real;
@@ -31,6 +35,10 @@ package 'Halcyon dPCR-24 system requirements' {
             doc /*
              * The instrument shall keep the mean utilisation of the
              * fluorescence imagers at or below 85% at nominal load.
+             *
+             * .. image:: _assets/utilisation-baseSteady.svg
+             *    :alt: Simulated utilisation per resource, baseSteady scenario
+             *    :class: image
              */
             attribute requiredImagerUtilisation : Real = 0.85;
             attribute measuredImagerUtilisation : Real;
@@ -52,6 +60,10 @@ package 'Halcyon dPCR-24 system requirements' {
             doc /*
              * The instrument shall report the first result of a batch
              * within 90 minutes of batch loading.
+             *
+             * .. image:: _assets/first-result-comparison.svg
+             *    :alt: Time to first result for a batch of 24 against the 90 minute threshold
+             *    :class: image
              */
             attribute requiredTimeToFirstResult : DurationValue = 90 [min];
             attribute measuredTimeToFirstResult : DurationValue;
