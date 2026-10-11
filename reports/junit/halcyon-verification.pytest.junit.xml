@@ -1,0 +1,411 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite name="halcyon-verification" tests="43" failures="8" errors="0" skipped="0" time="168.069">
+  <testcase classname="verification.layer1_model" name="check_model_loads_from_sysml" time="0.000">
+    <properties>
+      <property name="PACKAGES" value="9" />
+      <property name="SCENARIOS" value="4" />
+      <property name="STEPS" value="28" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer1_model" name="check_pilot_conformance" time="63.793" />
+  <testcase classname="verification.layer1_model" name="check_every_step_is_allocated_or_instant" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-THR-001" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer1_model" name="check_allocations_reference_resources" time="0.000" />
+  <testcase classname="verification.layer1_model" name="check_isa88_hierarchy" time="0.000" />
+  <testcase classname="verification.layer1_model" name="check_sys_thr_001_has_satisfy_and_verify" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-THR-001" />
+      <property name="SATISFY_COUNT" value="2" />
+      <property name="VERIFY_COUNT" value="2" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer1_model" name="check_sys_utl_001_has_satisfy_and_verify" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-UTL-001" />
+      <property name="SATISFY_COUNT" value="1" />
+      <property name="VERIFY_COUNT" value="2" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer1_model" name="check_sys_tat_001_has_satisfy_and_verify" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-TAT-001" />
+      <property name="SATISFY_COUNT" value="1" />
+      <property name="VERIFY_COUNT" value="2" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer1_model" name="check_sys_tat_002_has_satisfy_and_verify" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-TAT-002" />
+      <property name="SATISFY_COUNT" value="1" />
+      <property name="VERIFY_COUNT" value="2" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer1_model" name="check_sys_tat_003_has_satisfy_and_verify" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-TAT-003" />
+      <property name="SATISFY_COUNT" value="1" />
+      <property name="VERIFY_COUNT" value="1" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer1_model" name="check_sys_val_001_has_satisfy_and_verify" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-VAL-001" />
+      <property name="SATISFY_COUNT" value="1" />
+      <property name="VERIFY_COUNT" value="1" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer1_model" name="check_sys_val_002_has_satisfy_and_verify" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-VAL-002" />
+      <property name="OBSERVED" value="1" />
+      <property name="SATISFY_COUNT" value="1" />
+      <property name="VERIFY_COUNT" value="1" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer1_model" name="check_sys_drp_001_has_satisfy_and_verify" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-DRP-001" />
+      <property name="OBSERVED" value="20000" />
+      <property name="SATISFY_COUNT" value="2" />
+      <property name="VERIFY_COUNT" value="1" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer1_model" name="check_sys_lys_001_has_satisfy_and_verify" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-LYS-001" />
+      <property name="OBSERVED" value="100" />
+      <property name="SATISFY_COUNT" value="1" />
+      <property name="VERIFY_COUNT" value="1" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer1_model" name="check_sys_ch_001_has_satisfy_and_verify" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-CH-001" />
+      <property name="OBSERVED" value="4" />
+      <property name="SATISFY_COUNT" value="1" />
+      <property name="VERIFY_COUNT" value="1" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer1_model" name="check_sys_ops_001_has_satisfy_and_verify" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-OPS-001" />
+      <property name="OBSERVED" value="30000" />
+      <property name="SATISFY_COUNT" value="1" />
+      <property name="VERIFY_COUNT" value="1" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer1_model" name="check_sys_stat_001_has_satisfy_and_verify" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-STAT-001" />
+      <property name="OBSERVED" value="2" />
+      <property name="SATISFY_COUNT" value="1" />
+      <property name="VERIFY_COUNT" value="1" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer2_bounds" name="check_capacity_estimate_reproduced" time="0.001">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-THR-001" />
+      <property name="BASE_BOUND_PER_SHIFT" value="82.4919" />
+      <property name="BASE_BOTTLENECK" value="blocks" />
+      <property name="HT_BOUND_PER_SHIFT" value="97.0167" />
+      <property name="HT_BOTTLENECK" value="stations" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer2_bounds" name="check_sys_thr_001_bound_base_steady" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-THR-001" />
+      <property name="BOUND_PER_SHIFT" value="82.4919" />
+      <property name="THRESHOLD" value="96" />
+      <property name="BOTTLENECK" value="blocks" />
+    </properties>
+    <failure message="infeasible: bound 82.5 per shift is limited by blocks; requires 96">infeasible: bound 82.5 per shift is limited by blocks; requires 96</failure>
+  </testcase>
+  <testcase classname="verification.layer2_bounds" name="check_sys_thr_001_bound_high_throughput" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-THR-001" />
+      <property name="BOUND_PER_SHIFT" value="97.0167" />
+      <property name="THRESHOLD" value="96" />
+      <property name="BOTTLENECK" value="stations" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer2_bounds" name="check_sys_utl_001_bound_base_steady" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-UTL-001" />
+      <property name="OFFERED_UTILISATION" value="0.5985" />
+      <property name="THRESHOLD" value="0.85" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer2_bounds" name="check_sys_utl_001_bound_high_throughput" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-UTL-001" />
+      <property name="OFFERED_UTILISATION" value="0.29925" />
+      <property name="THRESHOLD" value="0.85" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer2_bounds" name="check_sys_tat_001_path_base_batch" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-TAT-001" />
+      <property name="PATH_SECONDS" value="5185.47" />
+      <property name="LIMIT_SECONDS" value="5400" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer2_bounds" name="check_sys_tat_001_path_high_throughput_batch" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-TAT-001" />
+      <property name="PATH_SECONDS" value="5185.47" />
+      <property name="LIMIT_SECONDS" value="5400" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer2_bounds" name="check_sys_val_001_invalid_path_reachable" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-VAL-001" />
+      <property name="INVALID_DRAW" value="invalidCheck" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer2_bounds" name="check_sys_val_001_analytic_invalid_base" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-VAL-001" />
+      <property name="ANALYTIC_INVALID_RATE" value="1.15447e-05" />
+      <property name="THRESHOLD" value="0.02" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer2_bounds" name="check_sys_val_001_analytic_invalid_high_throughput" time="0.000">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-VAL-001" />
+      <property name="ANALYTIC_INVALID_RATE" value="1.15447e-05" />
+      <property name="THRESHOLD" value="0.02" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer3_simulation" name="check_sys_thr_001_ver_sys_thr_001" time="14.709">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-THR-001" />
+      <property name="CASE" value="verSysThr001" />
+      <property name="SCENARIO" value="baseSteady" />
+      <property name="N" value="10" />
+      <property name="MEAN" value="70.3" />
+      <property name="CI_LOWER" value="67.6653" />
+      <property name="CI_UPPER" value="72.9347" />
+      <property name="BOUND" value="67.6653" />
+      <property name="THRESHOLD" value="96" />
+      <property name="MARGIN" value="-0.295153" />
+      <property name="SENS_MINUS20_MEAN" value="84" />
+      <property name="SENS_MINUS20_MARGIN" value="-0.174243" />
+      <property name="SENS_PLUS20_MEAN" value="54.6" />
+      <property name="SENS_PLUS20_MARGIN" value="-0.478412" />
+    </properties>
+    <failure message="SYS-THR-001 verSysThr001: bound 67.6653 does not meet the threshold 96 (mean 70.3, 95% CI [67.6653, 72.9347])">SYS-THR-001 verSysThr001: bound 67.6653 does not meet the threshold 96 (mean 70.3, 95% CI [67.6653, 72.9347])</failure>
+  </testcase>
+  <testcase classname="verification.layer3_simulation" name="check_sys_thr_001_ver_thr_001_ht" time="15.405">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-THR-001" />
+      <property name="CASE" value="VER-THR-001-HT" />
+      <property name="SCENARIO" value="highThroughput" />
+      <property name="N" value="10" />
+      <property name="MEAN" value="75" />
+      <property name="CI_LOWER" value="71.7657" />
+      <property name="CI_UPPER" value="78.2343" />
+      <property name="BOUND" value="71.7657" />
+      <property name="THRESHOLD" value="96" />
+      <property name="MARGIN" value="-0.252441" />
+      <property name="SENS_MINUS20_MEAN" value="88.8" />
+      <property name="SENS_MINUS20_MARGIN" value="-0.176579" />
+      <property name="SENS_PLUS20_MEAN" value="58.4" />
+      <property name="SENS_PLUS20_MARGIN" value="-0.46685" />
+    </properties>
+    <failure message="SYS-THR-001 VER-THR-001-HT: bound 71.7657 does not meet the threshold 96 (mean 75, 95% CI [71.7657, 78.2343])">SYS-THR-001 VER-THR-001-HT: bound 71.7657 does not meet the threshold 96 (mean 75, 95% CI [71.7657, 78.2343])</failure>
+  </testcase>
+  <testcase classname="verification.layer3_simulation" name="check_sys_utl_001_ver_sys_utl_001" time="0.005">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-UTL-001" />
+      <property name="CASE" value="verSysUtl001" />
+      <property name="SCENARIO" value="baseSteady" />
+      <property name="N" value="10" />
+      <property name="MEAN" value="0.440625" />
+      <property name="CI_LOWER" value="0.425391" />
+      <property name="CI_UPPER" value="0.455859" />
+      <property name="BOUND" value="0.455859" />
+      <property name="THRESHOLD" value="0.85" />
+      <property name="MARGIN" value="0.463695" />
+      <property name="SENS_MINUS20_MEAN" value="0.422" />
+      <property name="SENS_MINUS20_MARGIN" value="0.472719" />
+      <property name="SENS_PLUS20_MEAN" value="0.411" />
+      <property name="SENS_PLUS20_MARGIN" value="0.480639" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer3_simulation" name="check_sys_utl_001_ver_utl_001_ht" time="0.005">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-UTL-001" />
+      <property name="CASE" value="VER-UTL-001-HT" />
+      <property name="SCENARIO" value="highThroughput" />
+      <property name="N" value="10" />
+      <property name="MEAN" value="0.23625" />
+      <property name="CI_LOWER" value="0.225545" />
+      <property name="CI_UPPER" value="0.246955" />
+      <property name="BOUND" value="0.246955" />
+      <property name="THRESHOLD" value="0.85" />
+      <property name="MARGIN" value="0.709465" />
+      <property name="SENS_MINUS20_MEAN" value="0.2235" />
+      <property name="SENS_MINUS20_MARGIN" value="0.708238" />
+      <property name="SENS_PLUS20_MEAN" value="0.22125" />
+      <property name="SENS_PLUS20_MARGIN" value="0.705283" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer3_simulation" name="check_sys_tat_001_ver_sys_tat_001" time="4.265">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-TAT-001" />
+      <property name="CASE" value="verSysTat001" />
+      <property name="SCENARIO" value="baseBatch" />
+      <property name="N" value="10" />
+      <property name="MEAN" value="9143.05" />
+      <property name="CI_LOWER" value="9109.7" />
+      <property name="CI_UPPER" value="9176.41" />
+      <property name="BOUND" value="9176.41" />
+      <property name="THRESHOLD" value="5400" />
+      <property name="MARGIN" value="-0.699334" />
+      <property name="SENS_MINUS20_MEAN" value="7377.34" />
+      <property name="SENS_MINUS20_MARGIN" value="-0.374339" />
+      <property name="SENS_PLUS20_MEAN" value="inf" />
+      <property name="SENS_PLUS20_MARGIN" value="-inf" />
+    </properties>
+    <failure message="SYS-TAT-001 verSysTat001: bound 9176.41 does not meet the threshold 5400 (mean 9143.05, 95% CI [9109.7, 9176.41])">SYS-TAT-001 verSysTat001: bound 9176.41 does not meet the threshold 5400 (mean 9143.05, 95% CI [9109.7, 9176.41])</failure>
+  </testcase>
+  <testcase classname="verification.layer3_simulation" name="check_sys_tat_001_ver_tat_001_ht" time="4.354">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-TAT-001" />
+      <property name="CASE" value="VER-TAT-001-HT" />
+      <property name="SCENARIO" value="highThroughputBatch" />
+      <property name="N" value="10" />
+      <property name="MEAN" value="9143.05" />
+      <property name="CI_LOWER" value="9109.7" />
+      <property name="CI_UPPER" value="9176.41" />
+      <property name="BOUND" value="9176.41" />
+      <property name="THRESHOLD" value="5400" />
+      <property name="MARGIN" value="-0.699334" />
+      <property name="SENS_MINUS20_MEAN" value="7377.34" />
+      <property name="SENS_MINUS20_MARGIN" value="-0.374339" />
+      <property name="SENS_PLUS20_MEAN" value="inf" />
+      <property name="SENS_PLUS20_MARGIN" value="-inf" />
+    </properties>
+    <failure message="SYS-TAT-001 VER-TAT-001-HT: bound 9176.41 does not meet the threshold 5400 (mean 9143.05, 95% CI [9109.7, 9176.41])">SYS-TAT-001 VER-TAT-001-HT: bound 9176.41 does not meet the threshold 5400 (mean 9143.05, 95% CI [9109.7, 9176.41])</failure>
+  </testcase>
+  <testcase classname="verification.layer3_simulation" name="check_sys_tat_002_ver_sys_tat_002" time="29.074">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-TAT-002" />
+      <property name="CASE" value="verSysTat002" />
+      <property name="SCENARIO" value="baseSteady" />
+      <property name="N" value="10" />
+      <property name="MEAN" value="11124.8" />
+      <property name="CI_LOWER" value="9705" />
+      <property name="CI_UPPER" value="12544.7" />
+      <property name="BOUND" value="12544.7" />
+      <property name="THRESHOLD" value="9000" />
+      <property name="MARGIN" value="-0.393855" />
+      <property name="SENS_MINUS20_MEAN" value="6217.58" />
+      <property name="SENS_MINUS20_MARGIN" value="0.121373" />
+      <property name="SENS_PLUS20_MEAN" value="15481.6" />
+      <property name="SENS_PLUS20_MARGIN" value="-0.960768" />
+    </properties>
+    <failure message="SYS-TAT-002 verSysTat002: bound 12544.7 does not meet the threshold 9000 (mean 11124.8, 95% CI [9705, 12544.7])">SYS-TAT-002 verSysTat002: bound 12544.7 does not meet the threshold 9000 (mean 11124.8, 95% CI [9705, 12544.7])</failure>
+  </testcase>
+  <testcase classname="verification.layer3_simulation" name="check_sys_tat_002_ver_tat_002_ht" time="29.824">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-TAT-002" />
+      <property name="CASE" value="VER-TAT-002-HT" />
+      <property name="SCENARIO" value="highThroughput" />
+      <property name="N" value="10" />
+      <property name="MEAN" value="8852.5" />
+      <property name="CI_LOWER" value="7274.89" />
+      <property name="CI_UPPER" value="10430.1" />
+      <property name="BOUND" value="10430.1" />
+      <property name="THRESHOLD" value="9000" />
+      <property name="MARGIN" value="-0.1589" />
+      <property name="SENS_MINUS20_MEAN" value="4868.68" />
+      <property name="SENS_MINUS20_MARGIN" value="0.415307" />
+      <property name="SENS_PLUS20_MEAN" value="14381.8" />
+      <property name="SENS_PLUS20_MARGIN" value="-0.909123" />
+    </properties>
+    <failure message="SYS-TAT-002 VER-TAT-002-HT: bound 10430.1 does not meet the threshold 9000 (mean 8852.5, 95% CI [7274.89, 10430.1])">SYS-TAT-002 VER-TAT-002-HT: bound 10430.1 does not meet the threshold 9000 (mean 8852.5, 95% CI [7274.89, 10430.1])</failure>
+  </testcase>
+  <testcase classname="verification.layer3_simulation" name="check_sys_tat_003_ver_sys_tat_003" time="0.002">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-TAT-003" />
+      <property name="CASE" value="verSysTat003" />
+      <property name="SCENARIO" value="baseSteady" />
+      <property name="N" value="10" />
+      <property name="MEAN" value="7946.94" />
+      <property name="CI_LOWER" value="7301" />
+      <property name="CI_UPPER" value="8592.88" />
+      <property name="BOUND" value="8592.88" />
+      <property name="THRESHOLD" value="7200" />
+      <property name="MARGIN" value="-0.193456" />
+      <property name="SENS_MINUS20_MEAN" value="5457.05" />
+      <property name="SENS_MINUS20_MARGIN" value="0.0390766" />
+      <property name="SENS_PLUS20_MEAN" value="8132.77" />
+      <property name="SENS_PLUS20_MARGIN" value="-0.259214" />
+    </properties>
+    <failure message="SYS-TAT-003 verSysTat003: bound 8592.88 does not meet the threshold 7200 (mean 7946.94, 95% CI [7301, 8592.88])">SYS-TAT-003 verSysTat003: bound 8592.88 does not meet the threshold 7200 (mean 7946.94, 95% CI [7301, 8592.88])</failure>
+  </testcase>
+  <testcase classname="verification.layer3_simulation" name="check_sys_val_001_ver_sys_val_001" time="0.001">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-VAL-001" />
+      <property name="CASE" value="verSysVal001" />
+      <property name="SCENARIO" value="baseSteady" />
+      <property name="N" value="10" />
+      <property name="MEAN" value="0" />
+      <property name="CI_LOWER" value="0" />
+      <property name="CI_UPPER" value="0" />
+      <property name="BOUND" value="0" />
+      <property name="THRESHOLD" value="0.02" />
+      <property name="MARGIN" value="1" />
+      <property name="SENS_MINUS20_MEAN" value="0" />
+      <property name="SENS_MINUS20_MARGIN" value="1" />
+      <property name="SENS_PLUS20_MEAN" value="0" />
+      <property name="SENS_PLUS20_MARGIN" value="1" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer4_self" name="check_sim_conservation" time="0.365">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-THR-001" />
+      <property name="ARRIVALS" value="51" />
+      <property name="GAP" value="0" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer4_self" name="check_sim_littles_law" time="0.212">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-THR-001" />
+      <property name="L_AVERAGE" value="5.17039" />
+      <property name="LAMBDA_W" value="5.17039" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer4_self" name="check_sim_fixed_seed_reproducibility" time="0.556">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-THR-001" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer4_self" name="check_sim_single_sample_path_time" time="0.053">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-TAT-001" />
+      <property name="SIMULATED_S" value="5185.47" />
+      <property name="HAND_S" value="5185.47" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer4_self" name="check_sim_utilisation_matches_analytic" time="0.750">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-UTL-001" />
+      <property name="SIMULATED" value="0.28125" />
+      <property name="ANALYTIC" value="0.29925" />
+    </properties>
+  </testcase>
+  <testcase classname="verification.layer4_self" name="check_sim_invalid_path_matches_analytic" time="4.690">
+    <properties>
+      <property name="REQUIREMENT" value="SYS-VAL-001" />
+      <property name="INVALID_COUNT" value="14" />
+      <property name="FINISHED" value="296" />
+      <property name="SIMULATED_INVALID" value="0.0472973" />
+      <property name="ANALYTIC_INVALID" value="0.063441" />
+    </properties>
+  </testcase>
+</testsuite>
