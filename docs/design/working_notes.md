@@ -64,12 +64,16 @@ Developer Guide and the files in this repository and in the StrictDoc branch
 - StrictDoc SysML format: in progress on branch `david/sysml-format`.
 - Conformance gate: done (`tools/PilotCheck.java`,
   `tools/sysml_conformance.py`, `tests/test_sysml_conformance.py`).
-- Model and SimLib: in progress (07:40). Agent "model" owns
-  `model/**`, `docs/design/calibration.md` and the SimLib and change-log
-  sections of `docs/design/sysml_conventions.md`.
-- Coordination (07:40): two agents built the gate in parallel. The model
-  agent adopted the existing `tools/PilotCheck.java` gate and removed its
-  own copy. If you also build `model/**`, stop and leave a note here first.
+- SimLib: done (`model/library/SimLib.sysml`), with `Step::retest` and
+  `Configuration::maxRetests` added 2026-10-11.
+- Requirements: done. Nine STK-* and twelve SYS-* requirements.
+- Design: done. Physics, hardware, workflow, allocation, scenarios and
+  verification pass the gate with zero errors.
+- Capacity estimate: done (`docs/design/capacity_estimate.md`). Base is
+  thermal-limited at 82 per shift. HighThroughput is station-limited at
+  97 per shift, at 99% utilisation.
+- Open: the base configuration misses SYS-THR-001 (see capacity note).
+  The waste store has no allocation. Simulation and generator: not started.
 - Generator, animation, verification: not started (waits for the parser
   API from the StrictDoc branch).
 
@@ -84,3 +88,12 @@ Developer Guide and the files in this repository and in the StrictDoc branch
 - 2026-10-11: Conformance gate validates through the Pilot's Java API
   (`tools/PilotCheck.java`), not the stdin REPL. All files share one
   resource set, so file order does not matter.
+- 2026-10-11: Model syntax changes forced by the Pilot are recorded in
+  `sysml_conventions.md` (change log). The main ones: guarded decisions are
+  `first d if <expr> then <a>;`, `::` on requirement features is replaced
+  by dot access, and `satisfy ... by` takes a usage. Each decision is
+  listed for the StrictDoc parser author.
+- 2026-10-11: Base configuration keeps the brief's cycle times (40 cycles,
+  about 47 min), so two thermal blocks give 82 per shift. This is below the
+  96 per shift requirement. The decision whether to add a block, shorten the
+  cycle, or change the requirement is left to the user.
