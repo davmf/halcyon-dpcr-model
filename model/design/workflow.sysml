@@ -4,8 +4,10 @@ package HalcyonWorkflow {
      * procedures (intake, extraction, partitioning, amplification,
      * readout). Each unit procedure has operations, and each operation has
      * phases, which are Steps. Equipment is bound in the allocation
-     * package. A cartridge that aborts or yields an invalid result goes
-     * to a retest step (retest = true).
+     * package. A partition fails both droplet checks with probability
+     * pLowDroplets squared. The readout draws that outcome, and a failed run
+     * goes to a retest step (retest = true). An aborted cartridge also goes
+     * to a retest step.
      */
 
     private import ScalarValues::*;
@@ -16,7 +18,10 @@ package HalcyonWorkflow {
     private import HalcyonHardware::*;
 
     item def Sample :> WorkItem {
-        attribute invalid : Boolean default false;
+        doc /*
+         * One work item. Its result is INVALID when the run ends with no
+         * reportable result and no retest is left (see the conventions).
+         */
     }
 
     action def <'WF-PROC'> SampleProcedure {
@@ -104,19 +109,14 @@ package HalcyonWorkflow {
             action regenerate : Step {
                 :>> nominal = DropletGenerationTime(partitionVolume = cart.partitionVolume, dropletVolume = dropletGen.dropletVolume, frequency = dropletGen.dropletFrequency);
             }
-            action markInvalid : Step { :>> nominal = 0 [s]; }
             action transferToAmplification : Step { :>> nominal = 30 [s]; }
-            decide lowCount1;
-            decide lowCount2;
+            decide lowCount;
             merge partitioned;
             first meter then generate;
-            first generate then lowCount1;
-            first lowCount1 if Bernoulli(p = pLowDroplets) then regenerate;
-            first lowCount1 if not Bernoulli(p = pLowDroplets) then partitioned;
-            first regenerate then lowCount2;
-            first lowCount2 if Bernoulli(p = pLowDroplets) then markInvalid;
-            first lowCount2 if not Bernoulli(p = pLowDroplets) then partitioned;
-            first markInvalid then partitioned;
+            first generate then lowCount;
+            first lowCount if Bernoulli(p = pLowDroplets) then regenerate;
+            first lowCount if not Bernoulli(p = pLowDroplets) then partitioned;
+            first regenerate then partitioned;
             first partitioned then transferToAmplification;
         }
 
@@ -142,8 +142,8 @@ package HalcyonWorkflow {
             decide invalidCheck;
             first imaging then poissonAnalysis;
             first poissonAnalysis then invalidCheck;
-            first invalidCheck if sample.invalid then reflexRetest;
-            first invalidCheck if not sample.invalid then report;
+            first invalidCheck if Bernoulli(p = pLowDroplets * pLowDroplets) then reflexRetest;
+            first invalidCheck if not Bernoulli(p = pLowDroplets * pLowDroplets) then report;
             first report then transferToWaste;
         }
 
