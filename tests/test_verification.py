@@ -41,11 +41,14 @@ def test_confidence_interval_is_symmetric_around_the_mean() -> None:
 def test_layer2_reports_the_expected_failures(context: Context) -> None:
     results = {r.name: r for r in run_module(context, "layer2", layer2_bounds)}
     assert results["check_capacity_estimate_reproduced"].passed
-    assert results["check_sys_utl_001_analytic_imager_utilisation"].passed
-    infeasible = results["check_sys_thr_001_analytic_bound_meets_requirement"]
+    assert results["check_sys_utl_001_bound_base_steady"].passed
+    assert results["check_sys_utl_001_bound_high_throughput"].passed
+    infeasible = results["check_sys_thr_001_bound_base_steady"]
     assert not infeasible.passed
     assert "blocks" in infeasible.message
-    assert not results["check_sys_val_001_invalid_marking_exists"].passed
+    assert results["check_sys_thr_001_bound_high_throughput"].passed
+    assert results["check_sys_val_001_invalid_path_reachable"].passed
+    assert results["check_sys_val_001_analytic_invalid_base"].passed
 
 
 def test_junit_file_has_one_case_per_check(tmp_path: Path) -> None:

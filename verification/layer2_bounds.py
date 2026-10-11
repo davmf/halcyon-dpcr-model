@@ -5,7 +5,14 @@ Reproduces docs/design/capacity_estimate.md. The expected values below are
 copied from that note. Differences are reported, not hidden.
 """
 
-from generator.analytic import capacity_bounds, most_likely_path_seconds
+from generator import ir
+from generator.analytic import (
+    CapacityBounds,
+    capacity_bounds,
+    expected_visits,
+    invalid_rate,
+    most_likely_path_seconds,
+)
 from verification.core import Context
 
 # Busy seconds per cartridge, from docs/design/capacity_estimate.md.
@@ -67,38 +74,78 @@ def check_capacity_estimate_reproduced(context: Context) -> None:
     assert not problems, "; ".join(problems)
 
 
-def check_sys_thr_001_analytic_bound_meets_requirement(
-    context: Context,
-) -> None:
-    """Fail early when the analytic upper bound is below the requirement.
+def _bounds(context: Context, scenario: str) -> CapacityBounds:
+    return capacity_bounds(context.model, scenario)
 
-    @relation(SYS-THR-001, scope=function)
-    """
-    bounds = capacity_bounds(context.model, "baseSteady")
-    requirement = context.model.requirements["SYS-THR-001"]
-    threshold = requirement.thresholds["requiredSamplesPerShift"]
+
+def _threshold(context: Context, uid: str) -> float:
+    return next(iter(context.model.requirements[uid].thresholds.values()))
+
+
+def _throughput_bound(context: Context, scenario: str) -> None:
+    bounds = _bounds(context, scenario)
+    threshold = _threshold(context, "SYS-THR-001")
     context.record("BOUND_PER_SHIFT", bounds.throughput_bound_per_shift)
     context.record("THRESHOLD", threshold)
+    context.record("BOTTLENECK", bounds.bottleneck)
     assert bounds.throughput_bound_per_shift >= threshold, (
         f"infeasible: bound {bounds.throughput_bound_per_shift:.1f} per shift "
         f"is limited by {bounds.bottleneck}; requires {threshold:.0f}"
     )
 
 
-def check_sys_utl_001_analytic_imager_utilisation(context: Context) -> None:
-    """Imager utilisation at the offered load is within the limit.
+def check_sys_thr_001_bound_base_steady(context: Context) -> None:
+    """Fail early when the analytic bound of baseSteady is below the limit.
 
-    @relation(SYS-UTL-001, scope=function)
+    @relation(SYS-THR-001, scope=function)
     """
-    bounds = capacity_bounds(context.model, "baseSteady")
+    _throughput_bound(context, "baseSteady")
+
+
+def check_sys_thr_001_bound_high_throughput(context: Context) -> None:
+    """Fail early when the analytic bound of highThroughput is below the limit.
+
+    @relation(SYS-THR-001, scope=function)
+    """
+    _throughput_bound(context, "highThroughput")
+
+
+def _imager_utilisation(context: Context, scenario: str) -> None:
+    bounds = _bounds(context, scenario)
     utilisation = bounds.resources["imagers"].utilisation
-    requirement = context.model.requirements["SYS-UTL-001"]
-    limit = requirement.thresholds["requiredImagerUtilisation"]
+    limit = _threshold(context, "SYS-UTL-001")
     context.record("OFFERED_UTILISATION", utilisation)
+    context.record("THRESHOLD", limit)
     assert utilisation <= limit, f"offered {utilisation:.3f} > {limit}"
 
 
-def check_sys_tat_001_most_likely_path_time(context: Context) -> None:
+def check_sys_utl_001_bound_base_steady(context: Context) -> None:
+    """Imager utilisation at the offered load, baseSteady.
+
+    @relation(SYS-UTL-001, scope=function)
+    """
+    _imager_utilisation(context, "baseSteady")
+
+
+def check_sys_utl_001_bound_high_throughput(context: Context) -> None:
+    """Imager utilisation at the offered load, highThroughput.
+
+    @relation(SYS-UTL-001, scope=function)
+    """
+    _imager_utilisation(context, "highThroughput")
+
+
+def _first_result_path(context: Context, scenario: str) -> None:
+    seconds = most_likely_path_seconds(
+        context.model, context.model.scenario(scenario)
+    )
+    limit = _threshold(context, "SYS-TAT-001")
+    context.record("PATH_SECONDS", seconds)
+    context.record("LIMIT_SECONDS", limit)
+    assert seconds <= limit, f"path {seconds:.0f} s > limit {limit:.0f} s"
+
+
+def check_sys_tat_001_path_base_batch(context: Context) -> None:
     """The most likely path with no queueing meets the first-result limit.
 
     Batch waits count the full batch timeout, because a lone sample waits
@@ -106,27 +153,68 @@ def check_sys_tat_001_most_likely_path_time(context: Context) -> None:
 
     @relation(SYS-TAT-001, scope=function)
     """
-    scenario = context.model.scenario("baseBatch")
-    seconds = most_likely_path_seconds(context.model, scenario)
-    limit = context.model.requirements["SYS-TAT-001"].thresholds[
-        "requiredTimeToFirstResult"
-    ]
-    context.record("PATH_SECONDS", seconds)
-    context.record("LIMIT_SECONDS", limit)
-    assert seconds <= limit, f"path {seconds:.0f} s > limit {limit:.0f} s"
+    _first_result_path(context, "baseBatch")
 
 
-def check_sys_val_001_invalid_marking_exists(context: Context) -> None:
-    """Some step must mark a sample invalid, or the invalid rate is zero.
+def check_sys_tat_001_path_high_throughput_batch(context: Context) -> None:
+    """The same bound for the high-throughput batch scenario.
 
-    The model has no assignment that sets sample.invalid, so SYS-VAL-001
-    would pass without being exercised. This check reports that gap.
+    @relation(SYS-TAT-001, scope=function)
+    """
+    _first_result_path(context, "highThroughputBatch")
+
+
+def check_sys_val_001_invalid_path_reachable(context: Context) -> None:
+    """The readout draw can send a partition to a retest, so invalid results
+    can occur. A reachable Bernoulli branch into a retest step is required.
 
     @relation(SYS-VAL-001, scope=function)
     """
-    marking = [
+    model = context.model
+    scenario = model.scenario("baseSteady")
+    visits = expected_visits(model, scenario)
+    retest_names = {
         name
-        for name, node in context.model.nodes.items()
-        if getattr(node, "assignments", ())
+        for name, node in model.nodes.items()
+        if isinstance(node, ir.Step) and node.retest
+    }
+    reachable = [
+        (name, branch.target)
+        for name, node in model.nodes.items()
+        if isinstance(node, ir.Decision) and visits[name] > 0
+        for branch in node.branches
+        if branch.target in retest_names
+        and isinstance(branch.guard, ir.BernoulliGuard)
+        and ir.evaluate(branch.guard.probability, scenario.values, model.calcs)
+        > 0
     ]
-    assert marking, "no step marks a sample invalid; the rate is untested"
+    assert reachable, "no reachable invalid draw into a retest"
+    context.record("INVALID_DRAW", reachable[0][0])
+
+
+def _analytic_invalid(context: Context, scenario: str) -> None:
+    model = context.model
+    rate = invalid_rate(model, model.scenario(scenario))
+    limit = _threshold(context, "SYS-VAL-001")
+    context.record("ANALYTIC_INVALID_RATE", rate)
+    context.record("THRESHOLD", limit)
+    assert rate <= limit, f"analytic invalid rate {rate:.3g} > {limit}"
+
+
+def check_sys_val_001_analytic_invalid_base(context: Context) -> None:
+    """Analytic invalid rate, baseSteady: retest probability to the power
+    of two, against the 2% limit.
+
+    @relation(SYS-VAL-001, scope=function)
+    """
+    _analytic_invalid(context, "baseSteady")
+
+
+def check_sys_val_001_analytic_invalid_high_throughput(
+    context: Context,
+) -> None:
+    """Analytic invalid rate, highThroughput.
+
+    @relation(SYS-VAL-001, scope=function)
+    """
+    _analytic_invalid(context, "highThroughput")

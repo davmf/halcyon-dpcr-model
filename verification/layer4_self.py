@@ -10,7 +10,7 @@ import dataclasses
 import math
 
 from generator import ir
-from generator.analytic import capacity_bounds
+from generator.analytic import capacity_bounds, invalid_rate
 from generator.ir import BatchArrivals, PoissonArrivals
 from generator.results import conservation_gap, littles_law, utilisation
 from verification.core import Context
@@ -144,4 +144,57 @@ def check_sim_utilisation_matches_analytic(context: Context) -> None:
     context.record("ANALYTIC", analytic.utilisation)
     assert abs(simulated - analytic.utilisation) <= UTILISATION_TOLERANCE, (
         f"simulated {simulated:.3f} vs analytic {analytic.utilisation:.3f}"
+    )
+
+
+STRESS_P_LOW_DROPLETS = 0.5
+STRESS_HORIZON_S = 40 * 3600.0
+
+
+def _stressed_model(context: Context) -> ir.Model:
+    """The base steady scenario with a high low-droplet rate.
+
+    At the nominal 3% the invalid rate is about one in 86,000, which a run
+    cannot estimate. A stressed rate makes the invalid path visible, so the
+    simulated and analytic rates can be compared.
+    """
+    scenario = context.model.scenarios["baseSteady"]
+    stressed = dataclasses.replace(
+        scenario,
+        values={**scenario.values, "pLowDroplets": STRESS_P_LOW_DROPLETS},
+    )
+    return dataclasses.replace(
+        context.model,
+        scenarios={**context.model.scenarios, "stressed": stressed},
+    )
+
+
+def check_sim_invalid_path_matches_analytic(context: Context) -> None:
+    """The invalid path runs and its rate matches the analytic value.
+
+    With pLowDroplets = 0.5, the readout draw is 0.25 per run and a sample is
+    invalid after two such runs. The simulated share must agree with the
+    analytic rate within three binomial standard errors.
+
+    @relation(SYS-VAL-001, scope=function)
+    """
+    model = _stressed_model(context)
+    result = context.run(
+        "stressed",
+        STRESS_HORIZON_S,
+        5,
+        model=model,
+    )
+    finished = [s for s in result.samples if s.outcome is not None]
+    invalid = [s for s in finished if s.outcome == "invalid"]
+    analytic = invalid_rate(model, model.scenario("stressed"))
+    simulated = len(invalid) / len(finished)
+    standard_error = math.sqrt(analytic * (1 - analytic) / len(finished))
+    context.record("INVALID_COUNT", float(len(invalid)))
+    context.record("FINISHED", float(len(finished)))
+    context.record("SIMULATED_INVALID", simulated)
+    context.record("ANALYTIC_INVALID", analytic)
+    assert len(invalid) > 0, "no invalid sample in the stressed run"
+    assert abs(simulated - analytic) <= 3 * standard_error, (
+        f"simulated {simulated:.4f} vs analytic {analytic:.4f}"
     )
