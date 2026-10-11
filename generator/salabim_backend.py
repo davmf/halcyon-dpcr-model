@@ -140,8 +140,6 @@ class _Engine:
             work_priority=priority,
         )
         self.samples.append(sample)
-        if self.options.animator is not None:
-            self.options.animator.on_sample_created(sample)
 
     def sample_duration(self, duration: Duration) -> float:
         """Draw one duration in seconds. Applies the duration scale."""
@@ -226,6 +224,7 @@ class _Sample(sim.Component):
         self.sample_id = sample_id
         self.work_priority = work_priority
         self.arrival_s = self.env.now()
+        self.current: tuple[str, ...] = ()
         self.attributes: dict[str, float] = {"invalid": 0.0}
         self.runs = 0
         self.retests = 0
@@ -317,6 +316,7 @@ class _Token(sim.Component):
                 f"{step.name}: a batch step cannot use other resources"
             )
         enqueued_at = self.env.now()
+        sample.current = tuple(step.allocations)
         if batches:
             self._enqueue_batch(batches[0], step)
         elif units:
@@ -333,6 +333,7 @@ class _Token(sim.Component):
                 )
         else:
             self.hold(engine.sample_duration(step.duration))
+        sample.current = ()
         if engine.options.record_trace:
             engine.trace.append(
                 TraceEvent(
@@ -504,7 +505,7 @@ def simulate(
         if pool.spec.kind is ResourceKind.BATCH:
             _BatchDispatcher(pool=pool, engine=engine)
     if options.animator is not None:
-        options.animator.attach(engine)
+        options.animator.attach(env, engine)
     _Source(engine=engine)
     if options.drain:
         env.run()

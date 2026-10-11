@@ -194,6 +194,31 @@ def cmd_plots(context: Context) -> int:
     return 0
 
 
+def cmd_animate(context: Context, args: argparse.Namespace) -> int:
+    from generator.animation import Animator
+    from generator.salabim_backend import RunOptions, simulate
+
+    if args.live:
+        animator = Animator(live=True)
+    else:
+        animator = Animator(video=Path(args.video))
+    options = RunOptions(
+        seed=args.seed,
+        horizon_s=args.horizon_h * 3600.0,
+        animator=animator,
+        blind_animation=not args.live,
+    )
+    result = simulate(context.model, args.scenario, options)
+    print(
+        f"{args.scenario}: {len(result.samples)} samples, "
+        f"{sum(1 for s in result.samples if s.outcome)} finished"
+    )
+    if not args.live:
+        size = Path(args.video).stat().st_size
+        print(f"video: {args.video} ({size / 1024:.0f} KiB)")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -205,6 +230,13 @@ def main(argv: list[str] | None = None) -> int:
     simulate.add_argument("--horizon-h", type=float, default=8.0)
     sub.add_parser("verify")
     sub.add_parser("plots")
+    animate = sub.add_parser("animate")
+    animate.add_argument("--scenario", required=True)
+    mode = animate.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--video", help="output .mp4 or .gif, headless")
+    mode.add_argument("--live", action="store_true", help="desktop window")
+    animate.add_argument("--horizon-h", type=float, default=1.0)
+    animate.add_argument("--seed", type=int, default=1)
     args = parser.parse_args(argv)
     context = Context(MODEL_DIR)
     if args.command == "check":
@@ -217,6 +249,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_verify(context)
     if args.command == "plots":
         return cmd_plots(context)
+    if args.command == "animate":
+        return cmd_animate(context, args)
     raise AssertionError(args.command)
 
 
