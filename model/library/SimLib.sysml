@@ -27,6 +27,11 @@ package SimLib {
     }
 
     abstract part def BatchResource :> Resource {
+        doc /*
+         * A batch starts when a unit is free and either batchSize items
+         * wait, or the oldest waiting item has waited batchTimeout. The
+         * batch takes up to batchSize items. Units run batches in parallel.
+         */
         attribute batchSize : Natural default 1;
         attribute batchTimeout : DurationValue default 0 [s];
     }
