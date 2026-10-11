@@ -118,14 +118,50 @@ package HalcyonVerification {
     }
 
     verification verSysOps001 : ModelCheck {
-        doc /* Hours of master mix at the nominal arrival rate, from the reagent store. */
+        doc /* Seconds of master mix at the nominal arrival rate, from the reagent store (SI). */
         objective { verify 'SYS-OPS-001'; }
-        attribute :>> observed = baseSteady.configuration.reagentStore.initialLevel / 12;
+        attribute :>> observed = baseSteady.configuration.reagentStore.initialLevel / 12 [1/h];
     }
 
     verification verSysStat001 : ModelCheck {
         doc /* Priority levels used by work items (routine and STAT). */
         objective { verify 'SYS-STAT-001'; }
         attribute :>> observed = 2;
+    }
+
+    verification <'VER-THR-001-HT'> verSysThr001HighThroughput : SimulationVerification {
+        doc /* Completed samples per 8-hour shift, high-throughput configuration. */
+        objective { verify 'SYS-THR-001'; }
+        attribute :>> measured = 'SYS-THR-001'.measuredSamplesPerShift;
+        attribute :>> metric = MetricKind::completedPerShift;
+        attribute :>> horizon = 8 [h];
+        ref part :>> scenario = highThroughput;
+    }
+
+    verification <'VER-UTL-001-HT'> verSysUtl001HighThroughput : SimulationVerification {
+        doc /* Mean imager utilisation, high-throughput configuration (two imagers). */
+        objective { verify 'SYS-UTL-001'; }
+        attribute :>> measured = 'SYS-UTL-001'.measuredImagerUtilisation;
+        attribute :>> metric = MetricKind::utilisation;
+        ref part :>> scenario = highThroughput;
+        ref part :>> resource = highThroughput.configuration.imagers;
+    }
+
+    verification <'VER-TAT-001-HT'> verSysTat001HighThroughput : SimulationVerification {
+        doc /* First result of the 24-sample batch, high-throughput configuration. */
+        objective { verify 'SYS-TAT-001'; }
+        attribute :>> measured = 'SYS-TAT-001'.measuredTimeToFirstResult;
+        attribute :>> metric = MetricKind::timeToFirstResult;
+        attribute :>> horizon = 3 [h];
+        ref part :>> scenario = highThroughputBatch;
+    }
+
+    verification <'VER-TAT-002-HT'> verSysTat002HighThroughput : SimulationVerification {
+        doc /* Mean turnaround at nominal load, high-throughput configuration. */
+        objective { verify 'SYS-TAT-002'; }
+        attribute :>> measured = 'SYS-TAT-002'.measuredMeanTurnaround;
+        attribute :>> metric = MetricKind::meanTurnaround;
+        attribute :>> horizon = 16 [h];
+        ref part :>> scenario = highThroughput;
     }
 }
