@@ -62,6 +62,19 @@ hour, 10% STAT), `highThroughput` (three thermal blocks, two imagers).
 
 Tests: `.venv/bin/python -m pytest` (generator and fixture tests).
 
+Outputs: `build/` (plots, animation, StrictDoc HTML) is git-ignored. The
+JUnit results go to `reports/junit/`, which is deliberately not ignored by
+git: StrictDoc drops any path that `.gitignore` matches, so a results folder
+under `build/` would never reach the test-report page. Keep `reports/`
+untracked by choice, not by ignore rules.
+
+StrictDoc export (test-report page at
+`build/strictdoc/html/halcyon-dpcr-model/reports/junit/`):
+
+```sh
+.venv/bin/strictdoc export . --output-dir build/strictdoc --config strictdoc_config.py
+```
+
 ## Design verification
 
 `tools/run.py verify` runs the four layers. Each check is a function

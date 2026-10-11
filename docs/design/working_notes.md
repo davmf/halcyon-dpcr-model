@@ -75,7 +75,7 @@ Developer Guide and the files in this repository and in the StrictDoc branch
   through `@relation` markers. The JUnit results do not yet appear as a
   test-report document (open).
 
-## Simulation results (version 1, seed 1 unless stated)
+## Simulation results (version 1, seed 1 unless stated; superseded by the verify log)
 
 - Base (baseSteady, 8 h, 5 seeds): 62 to 74 per shift. Analytic bound 82.5
   (blocks). Partial batches (10 min timeout at 12 per hour) explain the gap.
@@ -86,17 +86,29 @@ Developer Guide and the files in this repository and in the StrictDoc branch
   shared stations and shuttle). The capacity note's 85 min assumes no
   queueing.
 
-## Model gaps and findings (for the model author, not fixed)
+## Model gaps: status (2026-10-11, after the model fixes)
 
-- `markInvalid` has no assignment that sets `sample.invalid`. The loaded
-  model never produces an invalid sample, so SYS-VAL-001 passes without
-  being exercised. Layer 2 reports this.
-- `poissonAnalysis` (60 s) has no allocation. Layer 1 reports it.
-- SYS-OPS-001: the ModelCheck computes `initialLevel / 12`, which is hours
-  as a plain number (8.33). The requirement threshold is 8 h = 28800 s. The
-  units do not match. Layer 1 fails.
-- Aborts after a bubble (`abortRetest`, with no retests left) count as
-  ABORTED, not INVALID. The capacity note counts them as invalid.
+1. Invalid marking. Resolved in the model: the invalid draw is a Bernoulli
+   guard at readout, with probability pLowDroplets squared. The loader
+   reads it; the `invalid` item attribute is gone. The generator treats an
+   exhausted retest as INVALID (SimLib outcome rule). Layer 2 checks that
+   the draw is reachable and that the analytic invalid rate is within 2%.
+   Layer 4 runs a stressed case (pLowDroplets = 0.5) to show the path in
+   simulation. At the nominal rate the invalid rate is about one in 86,000
+   (analytic), too rare to estimate by simulation.
+2. poissonAnalysis allocation. Resolved: allocated to `analysisComputer`
+   (one unit).
+3. SYS-OPS-001 units. Resolved: observed is in seconds.
+4. Abort as invalid. Resolved in the backend (exhausted retest is INVALID).
+5. HighThroughput verification. The model now has VER-THR-001-HT,
+   VER-UTL-001-HT, VER-TAT-001-HT (highThroughputBatch) and VER-TAT-002-HT.
+   Layer 3 runs every case; each has its own check function, named by
+   requirement UID and case.
+
+Open for the model author: the invalid rate at the nominal load cannot be
+estimated from simulation (about 1 in 86,000 samples), so SYS-VAL-001 passes
+on the analytic bound and on the stressed simulation check, not on the
+nominal simulation.
 
 ## StrictDoc links
 
