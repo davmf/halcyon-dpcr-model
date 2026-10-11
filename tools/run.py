@@ -17,6 +17,7 @@ this file.
 """
 
 import argparse
+import dataclasses
 import importlib
 import sys
 from pathlib import Path
@@ -201,14 +202,26 @@ def cmd_animate(context: Context, args: argparse.Namespace) -> int:
     if args.live:
         animator = Animator(live=True)
     else:
-        animator = Animator(video=Path(args.video))
+        video = Path(args.video)
+        animator = Animator(video=video, gif=video.suffix == ".gif")
     options = RunOptions(
         seed=args.seed,
         horizon_s=args.horizon_h * 3600.0,
         animator=animator,
         blind_animation=not args.live,
     )
-    result = simulate(context.model, args.scenario, options)
+    # The animation starts at time zero, so the clock shows the operation from
+    # the start rather than the warm-up.
+    model = dataclasses.replace(
+        context.model,
+        scenarios={
+            **context.model.scenarios,
+            args.scenario: dataclasses.replace(
+                context.model.scenario(args.scenario), warm_up_s=0.0
+            ),
+        },
+    )
+    result = simulate(model, args.scenario, options)
     print(
         f"{args.scenario}: {len(result.samples)} samples, "
         f"{sum(1 for s in result.samples if s.outcome)} finished"

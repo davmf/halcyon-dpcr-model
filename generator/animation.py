@@ -1,64 +1,120 @@
 """
-2D Salabim animation of the instrument layout, live or as video.
+2D Salabim animation of the instrument, live or as video.
 
-The layout is generated from the IR: one box per resource of the scenario,
-in declaration order, in a grid. Nothing here is specific to Halcyon.
+Layout, generated from the IR and the scenario only:
 
-- Boxes are coloured by state: idle (grey), busy (blue) when every unit
-  is claimed, waiting (orange) when a queue has formed.
-- Each cartridge is a circle placed on the box of the resource it uses.
-  A cartridge with no resource is drawn in the waiting area on the left.
-- A poller process updates positions every 10 simulated seconds.
-- A clock, the completed count, and the queue length of each resource are
-  text labels.
+- Title bar along the top: the scenario name.
+- Stage area on the left. One box per resource, in the order the procedure
+  first uses them (workflow order), in a grid of COLUMNS columns.
+- Panel on the right: legend, clock, completed count, and live utilisation
+  bars per resource with the queue length.
+- A cartridge is a dot on the box of the resource it uses. Dots are routine
+  (dark) or STAT (aqua). A dot with no resource keeps its last position.
+- A batch resource shows its fill, for example "fill 3/4".
 
-Two modes:
-- live: a desktop window (needs a display, tkinter).
-- video: a file (.mp4 or .gif), created headless with blind animation.
+Box colours: idle grey, busy blue, waiting orange (a queue has formed).
+The model has no faults, so no fault colour is drawn.
 
-The animator holds no simulation state. It reads the engine's samples and
-pools, so it can be removed without changing the results.
+Two modes: live (desktop window, needs a display) and video (headless
+blind animation, .mp4 or .gif). The animator only reads engine state.
 """
 
 from pathlib import Path
 
 import salabim as sim
 
+from generator import ir
 from generator.ir import ResourceKind
 
-VIDEO_SPEED = 60.0
 WIDTH = 1200
-HEIGHT = 720
-BOX_W = 230
-BOX_H = 130
-COLUMNS = 4
+HEIGHT = 760
+TITLE_H = 60
+PANEL_X = 880
+COLUMNS = 3
+BOX_W = 250
+BOX_H = 120
+BOX_GAP_X = 30
+BOX_GAP_Y = 40
+STAGE_X = 40
+STAGE_TOP = HEIGHT - TITLE_H - 60
+POLL_S = 10.0
+VIDEO_SPEED = 60.0  # simulated seconds per video second
+VIDEO_FPS = 25
+GIF_FPS = 4
 
+SURFACE = "#fcfcfb"
+TEXT = "#0b0b0b"
+TEXT_SECONDARY = "#52514e"
 IDLE = "#e4e3df"
 BUSY = "#2a78d6"
 WAITING = "#eb6834"
-TEXT = "#0b0b0b"
-SURFACE = "#fcfcfb"
+ROUTINE_DOT = "#52514e"
+STAT_DOT = "#1baf7a"
+BAR_TRACK = "#e4e3df"
+
+
+def workflow_order(model: ir.Model, scenario: ir.Scenario) -> list[str]:
+    """Resources in the order the procedure first uses them, then the rest.
+
+    Steps are visited in topological order, so a resource is placed where
+    the procedure first needs it, not where a breadth-first walk reaches it.
+    """
+    order: list[str] = []
+    seen: set[str] = set()
+    for name in topological_order(model):
+        node = model.nodes[name]
+        if isinstance(node, ir.Step):
+            for resource in node.allocations:
+                if resource not in seen:
+                    seen.add(resource)
+                    order.append(resource)
+    order.extend(name for name in scenario.resources if name not in seen)
+    return [name for name in order if name in scenario.resources]
+
+
+def topological_order(model: ir.Model) -> list[str]:
+    """Nodes from the start to the ends, every node after its predecessors."""
+    order: list[str] = []
+    state: dict[str, int] = {}
+
+    def visit(name: str) -> None:
+        if state.get(name) is not None:
+            return
+        state[name] = 1
+        for target in ir.successors(model.nodes[name]):
+            visit(target)
+        order.append(name)
+
+    visit(model.start)
+    order.reverse()
+    return order
 
 
 class Animator:
     """Attaches to one replication. Create one per run."""
 
-    def __init__(self, live: bool = False, video: Path | None = None) -> None:
+    def __init__(
+        self,
+        live: bool = False,
+        video: Path | None = None,
+        gif: bool = False,
+    ) -> None:
         if live and video is not None:
             raise ValueError("choose live or video, not both")
         if not live and video is None:
             raise ValueError("choose live or video")
         self.live = live
         self.video = video
+        self.gif = gif
         self.env: sim.Environment | None = None
         self.engine: object | None = None
-        self.boxes: dict[str, tuple[float, float]] = {}
+        self.centres: dict[str, tuple[float, float]] = {}
 
     def attach(self, env: sim.Environment, engine: object) -> None:
-        """Build the layout and start the poller. Called by the backend."""
+        """Set up the window or video, the layout, and the poller."""
         self.env = env
         self.engine = engine
-        options = {
+        options: dict[str, object] = {
             "animate": True,
             "width": WIDTH,
             "height": HEIGHT,
@@ -66,142 +122,186 @@ class Animator:
             "y0": 0,
             "x1": WIDTH,
             "background_color": SURFACE,
-            "modelname": "dPCR analyser",
+            "show_time": False,
+            "show_fps": False,
+            "show_menu_buttons": False,
+            # An empty model name hides Salabim's default subtitle.
+            "modelname": "",
         }
         if self.video is not None:
             self.video.parent.mkdir(parents=True, exist_ok=True)
             options["video"] = str(self.video)
-            options["fps"] = 25
-            # Simulated seconds per video second: one hour takes a minute.
+            options["fps"] = GIF_FPS if self.gif else VIDEO_FPS
             options["speed"] = VIDEO_SPEED
-        env.animation_parameters(**options)
-        self._layout()
+        env.animation_parameters(**options)  # type: ignore[arg-type]
+        self._title()
+        self._stages()
+        self._panel()
         _Poller(animator=self, engine=engine, drawing_env=env)
-
-    def _layout(self) -> None:
-        engine = self.engine
-        assert engine is not None and self.env is not None
-        env = self.env
-        scenario = engine.scenario  # type: ignore[attr-defined]
-        pools = engine.pools  # type: ignore[attr-defined]
-        names = list(scenario.resources)
-        for index, name in enumerate(names):
-            column = index % COLUMNS
-            row = index // COLUMNS
-            x = 40 + column * (BOX_W + 40)
-            y = HEIGHT - 110 - row * (BOX_H + 60)
-            self.boxes[name] = (x + BOX_W / 2, y + BOX_H / 2)
-            pool = pools[name]
-            spec = pool.spec
-
-            def colour(
-                pool: object = pool,
-            ) -> str:
-                return _state_colour(pool)
-
-            sim.AnimateRectangle(
-                spec=(x, y, x + BOX_W, y + BOX_H),
-                fillcolor=colour,
-                linecolor=TEXT,
-                env=env,
-            )
-            sim.AnimateText(
-                text=spec.name,
-                x=x + 8,
-                y=y + BOX_H - 18,
-                fontsize=16,
-                textcolor=TEXT,
-                env=env,
-            )
-            sim.AnimateText(
-                text=lambda pool=pool: _pool_text(pool),
-                x=x + 8,
-                y=y + 14,
-                fontsize=13,
-                textcolor=TEXT,
-                env=env,
-            )
-        sim.AnimateText(
-            text=lambda: f"t = {self.env.now() / 3600:.2f} h",
-            x=40,
-            y=HEIGHT - 40,
-            fontsize=18,
-            textcolor=TEXT,
-            env=env,
-        )
-        sim.AnimateText(
-            text=lambda: f"completed: {_completed(engine)}",
-            x=300,
-            y=HEIGHT - 40,
-            fontsize=18,
-            textcolor=TEXT,
-            env=env,
-        )
-        sim.AnimateText(
-            text="waiting",
-            x=20,
-            y=60,
-            fontsize=12,
-            textcolor=TEXT,
-            env=env,
-        )
-
-    def on_sample_created(self, sample: object) -> None:
-        """Hook kept for symmetry. Circles are created by the poller."""
-        del sample
 
     def close(self) -> None:
         if self.video is not None and self.env is not None:
             self.env.video_close()
 
+    # Layout -----------------------------------------------------------
 
-def _state_colour(pool: object) -> str:
-    spec = pool.spec  # type: ignore[attr-defined]
-    if spec.kind is ResourceKind.STORE:
-        return IDLE
-    queue = pool.waiting if hasattr(pool, "waiting") else []  # type: ignore[attr-defined]
-    if len(queue) > 0 or _queue_length(pool) > 0:
-        return WAITING
-    if _busy_units(pool) > 0:
-        return BUSY
-    return IDLE
+    def _title(self) -> None:
+        engine = self.engine
+        assert engine is not None and self.env is not None
+        name = engine.scenario.name  # type: ignore[attr-defined]
+        sim.AnimateText(
+            text=f"Halcyon dPCR-24  |  scenario {name}",
+            x=STAGE_X,
+            y=HEIGHT - 38,
+            fontsize=20,
+            textcolor=TEXT,
+            env=self.env,
+        )
 
+    def _stages(self) -> None:
+        engine = self.engine
+        assert engine is not None and self.env is not None
+        model = engine.model  # type: ignore[attr-defined]
+        scenario = engine.scenario  # type: ignore[attr-defined]
+        pools = engine.pools  # type: ignore[attr-defined]
+        for index, name in enumerate(workflow_order(model, scenario)):
+            column = index % COLUMNS
+            row = index // COLUMNS
+            x = STAGE_X + column * (BOX_W + BOX_GAP_X)
+            top = STAGE_TOP - row * (BOX_H + BOX_GAP_Y)
+            y = top - BOX_H
+            self.centres[name] = (x + BOX_W / 2, y + BOX_H / 2)
+            pool = pools[name]
+            sim.AnimateRectangle(
+                spec=(x, y, x + BOX_W, y + BOX_H),
+                fillcolor=lambda pool=pool: _state_colour(pool),
+                linecolor=TEXT_SECONDARY,
+                env=self.env,
+            )
+            sim.AnimateText(
+                text=_label(name, pool),
+                x=x + 10,
+                y=top - 22,
+                fontsize=15,
+                textcolor=TEXT,
+                env=self.env,
+            )
+            sim.AnimateText(
+                text=lambda pool=pool: _pool_text(pool),
+                x=x + 10,
+                y=y + 12,
+                fontsize=12,
+                textcolor=TEXT_SECONDARY,
+                env=self.env,
+            )
 
-def _queue_length(pool: object) -> int:
-    resource = pool.resource  # type: ignore[attr-defined]
-    if resource is not None:
-        return len(resource.requesters())
-    return 0
-
-
-def _busy_units(pool: object) -> int:
-    resource = pool.resource  # type: ignore[attr-defined]
-    if resource is not None:
-        return int(resource.claimed_quantity())
-    return int(pool.spec.capacity - pool.free_units)  # type: ignore[attr-defined]
-
-
-def _pool_text(pool: object) -> str:
-    spec = pool.spec  # type: ignore[attr-defined]
-    if spec.kind is ResourceKind.STORE:
-        resource = pool.resource  # type: ignore[attr-defined]
-        return f"stock {int(resource.available_quantity())}"
-    return (
-        f"busy {_busy_units(pool)}/{int(spec.capacity)}  "
-        f"queue {len(pool.waiting) if spec.kind is ResourceKind.BATCH else _queue_length(pool)}"  # type: ignore[attr-defined]
-    )
-
-
-def _completed(engine: object) -> int:
-    return sum(
-        1
-        for sample in engine.samples  # type: ignore[attr-defined]
-        if sample.outcome is not None  # type: ignore[attr-defined]
-    )
+    def _panel(self) -> None:
+        engine = self.engine
+        assert engine is not None and self.env is not None
+        env = self.env
+        pools = engine.pools  # type: ignore[attr-defined]
+        y = HEIGHT - TITLE_H - 30
+        sim.AnimateText(
+            text="Legend",
+            x=PANEL_X,
+            y=y,
+            fontsize=15,
+            textcolor=TEXT,
+            env=env,
+        )
+        legend = [
+            (IDLE, "box idle"),
+            (BUSY, "box busy"),
+            (WAITING, "box waiting (queue)"),
+            (ROUTINE_DOT, "dot routine sample"),
+            (STAT_DOT, "dot STAT sample"),
+        ]
+        for offset, (colour, text) in enumerate(legend):
+            row_y = y - 26 - offset * 22
+            sim.AnimateRectangle(
+                spec=(PANEL_X, row_y - 6, PANEL_X + 14, row_y + 8),
+                fillcolor=colour,
+                linecolor=TEXT_SECONDARY,
+                env=env,
+            )
+            sim.AnimateText(
+                text=text,
+                x=PANEL_X + 22,
+                y=row_y - 4,
+                fontsize=12,
+                textcolor=TEXT_SECONDARY,
+                env=env,
+            )
+        clock_y = y - 26 - len(legend) * 22 - 30
+        sim.AnimateText(
+            text=lambda: _clock_text(env),
+            x=PANEL_X,
+            y=clock_y,
+            fontsize=17,
+            textcolor=TEXT,
+            env=env,
+        )
+        sim.AnimateText(
+            text=lambda: f"completed: {_completed(engine)}",
+            x=PANEL_X,
+            y=clock_y - 28,
+            fontsize=17,
+            textcolor=TEXT,
+            env=env,
+        )
+        sim.AnimateText(
+            text="Utilisation (live)",
+            x=PANEL_X,
+            y=clock_y - 62,
+            fontsize=14,
+            textcolor=TEXT,
+            env=env,
+        )
+        bar_top = clock_y - 90
+        bar_width = 230.0
+        names = [
+            name
+            for name in workflow_order(
+                engine.model,  # type: ignore[attr-defined]
+                engine.scenario,  # type: ignore[attr-defined]
+            )
+            if pools[name].spec.kind is not ResourceKind.STORE
+        ]
+        for index, name in enumerate(names):
+            row_y = bar_top - index * 44
+            sim.AnimateRectangle(
+                spec=(PANEL_X, row_y - 8, PANEL_X + bar_width, row_y + 8),
+                fillcolor=BAR_TRACK,
+                linecolor=BAR_TRACK,
+                env=env,
+            )
+            pool = pools[name]
+            sim.AnimateRectangle(
+                spec=lambda pool=pool, row_y=row_y: (
+                    PANEL_X,
+                    row_y - 8,
+                    PANEL_X + bar_width * _utilisation_now(pool),
+                    row_y + 8,
+                ),
+                fillcolor=BUSY,
+                linecolor=BUSY,
+                env=env,
+            )
+            sim.AnimateText(
+                text=lambda pool=pool, name=name: (
+                    f"{name}  {_utilisation_now(pool) * 100:3.0f}%  "
+                    f"queue {_queue_now(pool)}"
+                ),
+                x=PANEL_X,
+                y=row_y + 14,
+                fontsize=11,
+                textcolor=TEXT_SECONDARY,
+                env=env,
+            )
 
 
 class _Poller(sim.Component):
-    """Moves the cartridge circles every 10 simulated seconds."""
+    """Moves the dots every POLL_S simulated seconds."""
 
     def setup(
         self,
@@ -217,42 +317,107 @@ class _Poller(sim.Component):
     def process(self) -> None:
         while True:
             self._update()
-            self.hold(10.0)
+            self.hold(POLL_S)
 
     def _update(self) -> None:
-        engine = self.engine
-        for sample in engine.samples:  # type: ignore[attr-defined]
+        for sample in self.engine.samples:  # type: ignore[attr-defined]
             if sample.sample_id not in self.drawn:
                 self.drawn.add(sample.sample_id)
-                _draw_sample(self.animator, sample, self.drawing_env)
+                _draw_dot(sample, self.drawing_env)
             _place(self.animator, sample)
 
 
 def _place(animator: Animator, sample: object) -> None:
-    current = getattr(sample, "current", ())
     if sample.outcome is not None:  # type: ignore[attr-defined]
-        sample.anim_position = (8.0, 8.0)  # type: ignore[attr-defined]
+        # Finished samples leave the picture; the completed count keeps them.
+        sample.anim_position = (-100.0, -100.0)  # type: ignore[attr-defined]
         return
-    if current:
-        centre = animator.boxes.get(current[0], (600.0, 300.0))
-        offset = (sample.sample_id % 5) * 14 - 28  # type: ignore[attr-defined]
-        sample.anim_position = (centre[0] + offset, centre[1])  # type: ignore[attr-defined]
-    else:
-        sample.anim_position = (60.0 + (sample.sample_id % 6) * 16, 60.0)  # type: ignore[attr-defined]
+    current = getattr(sample, "current", ())
+    if current and current[0] in animator.centres:
+        centre_x, centre_y = animator.centres[current[0]]
+        offset = (sample.sample_id % 7 - 3) * 14.0  # type: ignore[attr-defined]
+        sample.anim_position = (  # type: ignore[attr-defined]
+            centre_x + offset,
+            centre_y,
+        )
 
 
-def _draw_sample(
-    animator: Animator, sample: object, env: sim.Environment
-) -> None:
-    sample.anim_position = (60.0, 60.0)  # type: ignore[attr-defined]
+def _draw_dot(sample: object, env: sim.Environment) -> None:
+    sample.anim_position = (STAGE_X - 14.0, 60.0)  # type: ignore[attr-defined]
     sim.AnimateCircle(
         radius=6,
         x=lambda: sample.anim_position[0],  # type: ignore[attr-defined]
         y=lambda: sample.anim_position[1],  # type: ignore[attr-defined]
         fillcolor=lambda: (
-            WAITING if sample.work_priority > 0 else BUSY  # type: ignore[attr-defined]
+            STAT_DOT
+            if sample.work_priority > 0  # type: ignore[attr-defined]
+            else ROUTINE_DOT
         ),
-        linecolor=TEXT,
+        linecolor=SURFACE,
         env=env,
     )
-    del animator
+
+
+def _label(name: str, pool: object) -> str:
+    spec = pool.spec  # type: ignore[attr-defined]
+    return f"{name} ({spec.kind.value})"
+
+
+def _state_colour(pool: object) -> str:
+    spec = pool.spec  # type: ignore[attr-defined]
+    if spec.kind is ResourceKind.STORE:
+        return IDLE
+    if _queue_now(pool) > 0:
+        return WAITING
+    if _busy_units(pool) > 0:
+        return BUSY
+    return IDLE
+
+
+def _busy_units(pool: object) -> int:
+    spec = pool.spec  # type: ignore[attr-defined]
+    if spec.kind is ResourceKind.BATCH:
+        return int(spec.capacity - pool.free_units)  # type: ignore[attr-defined]
+    resource = pool.resource  # type: ignore[attr-defined]
+    return int(resource.claimed_quantity())
+
+
+def _utilisation_now(pool: object) -> float:
+    spec = pool.spec  # type: ignore[attr-defined]
+    return min(1.0, _busy_units(pool) / max(1, int(spec.capacity)))
+
+
+def _queue_now(pool: object) -> int:
+    spec = pool.spec  # type: ignore[attr-defined]
+    if spec.kind is ResourceKind.BATCH:
+        return len(pool.waiting)  # type: ignore[attr-defined]
+    resource = pool.resource  # type: ignore[attr-defined]
+    return len(resource.requesters())
+
+
+def _pool_text(pool: object) -> str:
+    spec = pool.spec  # type: ignore[attr-defined]
+    if spec.kind is ResourceKind.STORE:
+        resource = pool.resource  # type: ignore[attr-defined]
+        return f"stock {int(resource.available_quantity())}"
+    if spec.kind is ResourceKind.BATCH:
+        members = len(pool.waiting)  # type: ignore[attr-defined]
+        return (
+            f"fill {min(members, spec.batch_size)}/{spec.batch_size}  "
+            f"units busy {_busy_units(pool)}/{int(spec.capacity)}"
+        )
+    return f"busy {_busy_units(pool)}/{int(spec.capacity)}"
+
+
+def _completed(engine: object) -> int:
+    return sum(
+        1
+        for sample in engine.samples  # type: ignore[attr-defined]
+        if sample.outcome is not None  # type: ignore[attr-defined]
+    )
+
+
+def _clock_text(env: sim.Environment) -> str:
+    hours, rest = divmod(int(env.now()), 3600)
+    minutes, seconds = divmod(rest, 60)
+    return f"clock {hours:02d}:{minutes:02d}:{seconds:02d}"
