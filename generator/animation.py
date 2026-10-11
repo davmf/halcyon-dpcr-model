@@ -38,7 +38,7 @@ BOX_GAP_Y = 40
 STAGE_X = 40
 STAGE_TOP = HEIGHT - TITLE_H - 60
 POLL_S = 10.0
-VIDEO_SPEED = 60.0  # simulated seconds per video second
+DEFAULT_SPEED = 60.0  # simulated seconds per wall-clock second
 VIDEO_FPS = 25
 GIF_FPS = 4
 
@@ -98,14 +98,18 @@ class Animator:
         live: bool = False,
         video: Path | None = None,
         gif: bool = False,
+        speed: float = DEFAULT_SPEED,
     ) -> None:
         if live and video is not None:
             raise ValueError("choose live or video, not both")
         if not live and video is None:
             raise ValueError("choose live or video")
+        if speed <= 0:
+            raise ValueError("speed must be positive")
         self.live = live
         self.video = video
         self.gif = gif
+        self.speed = speed
         self.env: sim.Environment | None = None
         self.engine: object | None = None
         self.centres: dict[str, tuple[float, float]] = {}
@@ -127,12 +131,12 @@ class Animator:
             "show_menu_buttons": False,
             # An empty model name hides Salabim's default subtitle.
             "modelname": "",
+            "speed": self.speed,
         }
         if self.video is not None:
             self.video.parent.mkdir(parents=True, exist_ok=True)
             options["video"] = str(self.video)
             options["fps"] = GIF_FPS if self.gif else VIDEO_FPS
-            options["speed"] = VIDEO_SPEED
         env.animation_parameters(**options)  # type: ignore[arg-type]
         self._title()
         self._stages()

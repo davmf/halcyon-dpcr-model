@@ -222,10 +222,12 @@ def cmd_animate(context: Context, args: argparse.Namespace) -> int:
     from generator.salabim_backend import RunOptions, simulate
 
     if args.live:
-        animator = Animator(live=True)
+        animator = Animator(live=True, speed=args.speed)
     else:
         video = Path(args.video)
-        animator = Animator(video=video, gif=video.suffix == ".gif")
+        animator = Animator(
+            video=video, gif=video.suffix == ".gif", speed=args.speed
+        )
     options = RunOptions(
         seed=args.seed,
         horizon_s=(
@@ -274,6 +276,12 @@ def main(argv: list[str] | None = None) -> int:
     mode = animate.add_mutually_exclusive_group(required=True)
     mode.add_argument("--video", help="output .mp4 or .gif, headless")
     mode.add_argument("--live", action="store_true", help="desktop window")
+    animate.add_argument(
+        "--speed",
+        type=float,
+        default=60.0,
+        help="simulated seconds per wall-clock second (default 60)",
+    )
     animate.add_argument("--horizon-min", type=float, default=None)
     animate.add_argument("--horizon-h", type=float, default=1.0)
     animate.add_argument("--seed", type=int, default=1)
