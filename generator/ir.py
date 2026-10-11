@@ -338,6 +338,15 @@ class SimulationVerification:
 
 
 @dataclass(frozen=True)
+class ModelCheck:
+    """A design check: an observed design value against a requirement."""
+
+    requirement_uid: str
+    observed: Expr
+    scenario: str
+
+
+@dataclass(frozen=True)
 class Model:
     """The whole model: the process graph, calcs, scenarios and checks."""
 
@@ -348,6 +357,7 @@ class Model:
     scenarios: Mapping[str, Scenario]
     requirements: Mapping[str, Requirement]
     verifications: Sequence[SimulationVerification]
+    model_checks: Sequence[ModelCheck] = ()
     item_name: str = "sample"
     stat_priority: int = 1
 

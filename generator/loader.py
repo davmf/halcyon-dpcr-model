@@ -403,6 +403,51 @@ def _renamer(bindings: dict[str, str]) -> Callable[[list[str]], str]:
     return rename
 
 
+def _feature_paths(expression: Expression) -> list[list[str]]:
+    """Every feature reference path in an expression, in order."""
+    if isinstance(expression, FeatureReference):
+        return [expression.path or [expression.name]]
+    if isinstance(expression, UnaryOperation):
+        return _feature_paths(expression.operand)
+    if isinstance(expression, BinaryOperation):
+        return _feature_paths(expression.left) + _feature_paths(
+            expression.right
+        )
+    if isinstance(expression, Conditional):
+        return (
+            _feature_paths(expression.condition)
+            + _feature_paths(expression.consequence)
+            + _feature_paths(expression.alternative)
+        )
+    if isinstance(expression, Invocation):
+        paths: list[list[str]] = []
+        for argument in expression.arguments:
+            paths += _feature_paths(argument.value)
+        return paths
+    return []
+
+
+def _scenario_of(expression: Expression, scenarios: set[str]) -> str:
+    for path in _feature_paths(expression):
+        if path[0] in scenarios:
+            return path[0]
+    # A literal observed value names no scenario. Any scenario will do,
+    # because the value does not depend on the configuration.
+    return next(iter(sorted(scenarios)))
+
+
+def _scenario_renamer(scenario: str) -> Callable[[list[str]], str]:
+    """Paths `<scenario>.configuration.x` become `x`, the configuration key."""
+
+    def rename(path: list[str]) -> str:
+        rest = path[1:] if path[0] == scenario else path
+        if rest and rest[0] == "configuration":
+            rest = rest[1:]
+        return ".".join(rest)
+
+    return rename
+
+
 def _allocation_map(
     allocations: Sequence[SysMLAllocate],
 ) -> dict[str, list[str]]:
@@ -486,6 +531,7 @@ class ModelLoader:
             scenarios=scenarios,
             requirements=self._requirements(),
             verifications=self._verifications(),
+            model_checks=self._model_checks(scenario_parts),
             item_name=self._item_name(procedure),
             stat_priority=STAT_PRIORITY,
         )
@@ -769,14 +815,65 @@ class ModelLoader:
                     )
                     if value is not None:
                         thresholds[key] = value
+            measured = next(
+                (
+                    _feature_key(feature)
+                    for feature in member.members
+                    if isinstance(feature, SysMLAttribute)
+                    and (_feature_key(feature) or "").startswith("measured")
+                ),
+                None,
+            )
             requirements[member.short_name] = ir.Requirement(
                 uid=member.short_name,
                 title=member.name or "",
                 statement=member.doc or "",
                 constraint=constraint,
                 thresholds=thresholds,
+                measured_name=measured,
             )
         return requirements
+
+    def _model_checks(
+        self,
+        scenario_parts: dict[str, SysMLElement],
+    ) -> list[ir.ModelCheck]:
+        """Design checks: verification usages typed by ModelCheck."""
+        checks: list[ir.ModelCheck] = []
+        for member in _walk(self.packages):
+            if not (
+                isinstance(member, SysMLElement)
+                and member.kind == "verification"
+                and not member.is_definition
+                and _type_of(member) == "ModelCheck"
+            ):
+                continue
+            uid: str | None = None
+            observed: Expression | None = None
+            for feature in member.members:
+                if (
+                    isinstance(feature, SysMLElement)
+                    and feature.kind == "objective"
+                ):
+                    for verify in feature.members:
+                        if isinstance(verify, SysMLVerify):
+                            uid = verify.requirement
+                elif _feature_key(feature) == "observed":
+                    observed = getattr(feature, "value", None)
+            if uid is None or observed is None:
+                raise LoaderError(f"incomplete model check: {member.name}")
+            scenario = _scenario_of(observed, set(scenario_parts))
+            converter = _Converter(
+                _scenario_renamer(scenario), self.calc_parameters
+            )
+            checks.append(
+                ir.ModelCheck(
+                    requirement_uid=uid,
+                    observed=converter.convert(observed),
+                    scenario=scenario,
+                )
+            )
+        return checks
 
     def _verifications(self) -> list[ir.SimulationVerification]:
         verifications: list[ir.SimulationVerification] = []
