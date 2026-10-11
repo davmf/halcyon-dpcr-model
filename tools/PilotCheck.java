@@ -15,6 +15,7 @@ import java.util.List;
 
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.xtext.diagnostics.Severity;
 import org.eclipse.xtext.resource.XtextResource;
 import org.eclipse.xtext.util.CancelIndicator;
 import org.eclipse.xtext.validation.CheckMode;
@@ -54,11 +55,13 @@ public class PilotCheck {
                 .getResourceValidator()
                 .validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
             for (Issue issue : issues) {
-                if (issue.getSeverity() == org.eclipse.xtext.diagnostics.Severity.ERROR) {
+                if (issue.getSeverity() == Severity.ERROR) {
                     errors++;
                 }
                 String message = issue.getMessage() == null
-                    ? "" : issue.getMessage().replace('\n', ' ').replace('\t', ' ');
+                    ? ""
+                    : issue.getMessage().replace('\n', ' ')
+                        .replace('\t', ' ');
                 System.out.println(
                     "ISSUE\t" + issue.getSeverity() + "\t" + path + "\t"
                     + issue.getLineNumber() + "\t" + issue.getColumn() + "\t"

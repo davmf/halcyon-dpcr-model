@@ -38,11 +38,38 @@ Developer Guide and the files in this repository and in the StrictDoc branch
     tools/PilotCheck.java <pilot>/sysml.library <file.sysml>...`.
     About 12 s per run, mostly library loading.
 - Java 21: `/usr/bin/java`.
+- Pilot findings for model authors (probed 2026-10-11):
+  - A feature with a bound value (`attribute x : Real = 1;`) cannot be
+    redefined with a new value ("Cannot override a binding feature
+    value"). Library attributes that models override use `default` or no
+    value.
+  - `allocate`, `satisfy` and expressions need usages. Definition-owned
+    features (`PartDef::attr`) fail with "Must be an accessible feature
+    (use dot notation for nesting)". Use a part usage and dot chains.
+  - Redefining `[1..*]` as `[2]` is fine. Redefining `[2]` as `[3]` warns
+    ("larger multiplicity upper bound").
+  - `#derivation dependency` passes with `private import
+    RequirementDerivation::*;`, but `DerivationMetadata` targets
+    connections. Plain `dependency from A to B;` passes with no import.
+  - A requirement in another file resolves by short name after
+    `private import '<package name>'::**;`. Its features resolve as
+    `'SYS-THR-001'::measuredSamplesPerShift`.
+  - Accepted: `for i in 1..2 { ... }`, `assign x := e;`, `if Chance(p = q)
+    then a;`, `variant part base :> halcyon { ... }`, units `[Pa*s]`,
+    `[m^3]`, `[K/s]`, `[1/h]`. SI has `mm`, `mL`, `min`, `h`, `kPa` is
+    missing, and there is no `um`, `uL`, `nL`, `mPa*s`.
 
 ## Status
 
 - StrictDoc SysML format: in progress on branch `david/sysml-format`.
-- Model, SimLib, conformance gate: in progress.
+- Conformance gate: done (`tools/PilotCheck.java`,
+  `tools/sysml_conformance.py`, `tests/test_sysml_conformance.py`).
+- Model and SimLib: in progress (07:40). Agent "model" owns
+  `model/**`, `docs/design/calibration.md` and the SimLib and change-log
+  sections of `docs/design/sysml_conventions.md`.
+- Coordination (07:40): two agents built the gate in parallel. The model
+  agent adopted the existing `tools/PilotCheck.java` gate and removed its
+  own copy. If you also build `model/**`, stop and leave a note here first.
 - Generator, animation, verification: not started (waits for the parser
   API from the StrictDoc branch).
 

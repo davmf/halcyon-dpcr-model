@@ -13,6 +13,9 @@ status is 1 if any ERROR is reported, 2 on a setup error, 0 otherwise.
 Environment:
     SYSML_PILOT_HOME  Directory with the Pilot jar and `sysml.library/`
                       (default: ~/.cache/sysml-pilot/0.62.0/sysml).
+    SYSML_PILOT_JAR   Pilot jar (default: SYSML_PILOT_HOME/<jar>).
+    SYSML_LIBRARY     Standard library directory
+                      (default: SYSML_PILOT_HOME/sysml.library).
     JAVA              Java 21 executable (default: java on PATH).
 """
 
@@ -65,6 +68,16 @@ def pilot_home() -> Path:
     return Path(os.environ.get("SYSML_PILOT_HOME", DEFAULT_PILOT_HOME))
 
 
+def pilot_jar() -> Path:
+    default = pilot_home() / JAR_NAME
+    return Path(os.environ.get("SYSML_PILOT_JAR", default))
+
+
+def pilot_library() -> Path:
+    default = pilot_home() / "sysml.library"
+    return Path(os.environ.get("SYSML_LIBRARY", default))
+
+
 def collect_files(paths: list[Path]) -> list[Path]:
     files: list[Path] = []
     for path in paths:
@@ -77,14 +90,14 @@ def collect_files(paths: list[Path]) -> list[Path]:
     return [f.resolve() for f in files]
 
 
-def build_command(files: list[Path], home: Path) -> list[str]:
+def build_command(files: list[Path], jar: Path, library: Path) -> list[str]:
     java = os.environ.get("JAVA") or shutil.which("java") or "java"
     return [
         java,
         "-cp",
-        str(home / JAR_NAME),
+        str(jar),
         str(CHECKER_SOURCE),
-        str(home / "sysml.library"),
+        str(library),
         *[str(f) for f in files],
     ]
 
@@ -101,13 +114,15 @@ def parse_output(output: str) -> list[Issue]:
     return issues
 
 
-def check(files: list[Path], home: Path | None = None) -> Result:
-    home = home or pilot_home()
-    jar = home / JAR_NAME
+def check(files: list[Path]) -> Result:
+    jar = pilot_jar()
+    library = pilot_library()
     if not jar.is_file():
         raise RuntimeError(f"Pilot jar not found: {jar}")
+    if not library.is_dir():
+        raise RuntimeError(f"Pilot standard library not found: {library}")
     completed = subprocess.run(
-        build_command(files, home),
+        build_command(files, jar, library),
         capture_output=True,
         text=True,
         check=False,

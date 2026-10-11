@@ -13,9 +13,7 @@ FIXTURES = Path(__file__).parent / "fixtures" / "sysml_conformance"
 
 pytestmark = pytest.mark.skipif(
     shutil.which("java") is None
-    or not (
-        sysml_conformance.pilot_home() / sysml_conformance.JAR_NAME
-    ).is_file(),
+    or not sysml_conformance.pilot_jar().is_file(),
     reason="Java or the SysML v2 Pilot Implementation is not available",
 )
 
