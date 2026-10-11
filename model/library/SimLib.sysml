@@ -12,7 +12,7 @@ package SimLib {
 
     attribute def Probability :> Real;
 
-    enum def DistributionKind { enum fixed; enum triangular; enum normal; enum logNormal; enum computed; }
+    enum def DistributionKind { enum fixed; enum triangular; enum normal; enum logNormal; }
 
     enum def MetricKind { enum completedPerShift; enum timeToFirstResult; enum meanTurnaround; enum meanStatTurnaround; enum invalidRate; enum utilisation; }
 
@@ -50,6 +50,7 @@ package SimLib {
         attribute sd : DurationValue;
         attribute sigma : Real;
         attribute consumes : Natural default 0;
+        attribute retest : Boolean default false;
     }
 
     abstract attribute def ArrivalProcess {
@@ -65,7 +66,9 @@ package SimLib {
         attribute rate : FrequencyValue;
     }
 
-    abstract part def Configuration;
+    abstract part def Configuration {
+        attribute maxRetests : Natural default 1;
+    }
 
     abstract part def Scenario {
         attribute arrivals : ArrivalProcess;
@@ -74,7 +77,7 @@ package SimLib {
     }
 
     verification def SimulationVerification {
-        attribute measured : Real;
+        attribute measured;
         attribute metric : MetricKind;
         attribute horizon : DurationValue default 8 [h];
         attribute replications : Natural default 10;
