@@ -61,21 +61,51 @@ Developer Guide and the files in this repository and in the StrictDoc branch
 
 ## Status
 
-- StrictDoc SysML format: in progress on branch `david/sysml-format`.
-- Conformance gate: done (`tools/PilotCheck.java`,
-  `tools/sysml_conformance.py`, `tests/test_sysml_conformance.py`).
-- SimLib: done (`model/library/SimLib.sysml`), with `Step::retest` and
-  `Configuration::maxRetests` added 2026-10-11.
-- Requirements: done. Nine STK-* and twelve SYS-* requirements.
-- Design: done. Physics, hardware, workflow, allocation, scenarios and
-  verification pass the gate with zero errors.
-- Capacity estimate: done (`docs/design/capacity_estimate.md`). Base is
-  thermal-limited at 82 per shift. HighThroughput is station-limited at
-  97 per shift, at 99% utilisation.
-- Open: the base configuration misses SYS-THR-001 (see capacity note).
-  The waste store has no allocation. Simulation and generator: not started.
-- Generator, animation, verification: not started (waits for the parser
-  API from the StrictDoc branch).
+- Generator: done for version 1. `generator/ir.py`, `loader.py` (full
+  parser API, no opaque members), `salabim_backend.py`, `results.py`,
+  `analytic.py`, `plots.py`, `animation.py`. The loader matches the
+  hand-built fixture `tests/fixtures/halcyon_ir.py` except for the
+  `markInvalid` assignment (see Model gaps).
+- Verification: four layers in `verification/`, JUnit to
+  `build/results/halcyon-verification.pytest.junit.xml`.
+- CLI: `tools/run.py` (check, bounds, simulate, verify, plots, animate).
+- Tests: `tests/test_generator_*.py`, `tests/test_verification.py`,
+  `tests/test_cli.py`.
+- StrictDoc: requirement pages link to verification source functions
+  through `@relation` markers. The JUnit results do not yet appear as a
+  test-report document (open).
+
+## Simulation results (version 1, seed 1 unless stated)
+
+- Base (baseSteady, 8 h, 5 seeds): 62 to 74 per shift. Analytic bound 82.5
+  (blocks). Partial batches (10 min timeout at 12 per hour) explain the gap.
+- HighThroughput: 64 to 87 per shift. Analytic bound 97 (stations). Stations
+  run at about 92% in the simulation, not 99%: a step waits for its gantry
+  and stations together, so stations sit idle while a gantry is busy.
+- Batch of 24 at shift start: first result about 152 min (queueing on the
+  shared stations and shuttle). The capacity note's 85 min assumes no
+  queueing.
+
+## Model gaps and findings (for the model author, not fixed)
+
+- `markInvalid` has no assignment that sets `sample.invalid`. The loaded
+  model never produces an invalid sample, so SYS-VAL-001 passes without
+  being exercised. Layer 2 reports this.
+- `poissonAnalysis` (60 s) has no allocation. Layer 1 reports it.
+- SYS-OPS-001: the ModelCheck computes `initialLevel / 12`, which is hours
+  as a plain number (8.33). The requirement threshold is 8 h = 28800 s. The
+  units do not match. Layer 1 fails.
+- Aborts after a bubble (`abortRetest`, with no retests left) count as
+  ABORTED, not INVALID. The capacity note counts them as invalid.
+
+## StrictDoc links
+
+- Each verification check function has a `@relation(<UID>, scope=function)`
+  line in its docstring. StrictDoc links the source function to the
+  requirement (seen on the system requirements page).
+- JUnit testcases use classname = module path (`verification.layer3_simulation`)
+  and name = function name, in the `.pytest.junit.xml` dialect. The
+  export does not yet show the test-report document (open).
 
 ## Decisions
 
