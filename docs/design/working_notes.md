@@ -9,7 +9,7 @@ Developer Guide and the files in this repository and in the StrictDoc branch
 
 - Python: `/home/david/.local/bin/python3.15` (3.15.0rc2). Venv:
   `.venv/`, managed with `/home/david/.local/bin/uv`. Always run Python
-  through `.venv/bin/python`.
+  through `uv run python`.
 - Installed: salabim 26.0.8, greenlet 3.5.6 (undeclared Salabim dependency,
   needed), textx 4.4.0, numpy, matplotlib, pillow, opencv-python-headless,
   pytest, strictdoc (editable, from `/home/david/strictdoc`, branch

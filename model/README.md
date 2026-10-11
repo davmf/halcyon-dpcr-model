@@ -39,13 +39,13 @@ any error. The Pilot is cached at
 Java 21 is needed.
 
 ```sh
-.venv/bin/python tools/sysml_conformance.py model/
+uv run python tools/sysml_conformance.py model/
 ```
 
 Run the tests of the gate:
 
 ```sh
-.venv/bin/python -m pytest tests/test_sysml_conformance.py
+uv run --extra dev pytest tests/test_sysml_conformance.py
 ```
 
 The gate is slow (about 12 seconds per run), because it loads the standard

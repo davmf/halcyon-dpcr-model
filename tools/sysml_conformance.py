@@ -1,7 +1,7 @@
 """SysML v2 conformance gate: validate files with the OMG Pilot Implementation.
 
 Usage:
-    .venv/bin/python tools/sysml_conformance.py [PATH ...]
+    uv run python tools/sysml_conformance.py [PATH ...]
 
 PATH is a `.sysml` file or a directory (searched recursively). The default
 is `model/`. All files are loaded into one resource set together with the

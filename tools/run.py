@@ -1,7 +1,7 @@
 """
 Command line entry point of the Halcyon dPCR-24 model.
 
-Usage (from the repository root, with .venv/bin/python):
+Usage (from the repository root, prefixed with `uv run python`):
 
     tools/run.py check                      layer 1 (model) checks
     tools/run.py bounds                     layer 2 analytic bounds

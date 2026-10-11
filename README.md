@@ -27,8 +27,8 @@ that StrictDoc links to the SYS requirements.
 
 ```sh
 uv venv --python /home/david/.local/bin/python3.15 .venv
-uv pip install --python .venv/bin/python -e /home/david/strictdoc
-uv pip install --python .venv/bin/python -r pyproject.toml --extra dev
+uv pip install -e /home/david/strictdoc
+uv pip install -r pyproject.toml --extra dev
 ```
 
 ## Repository layout
@@ -46,22 +46,22 @@ build/           generated output (git-ignored)
 
 ## Running
 
-All commands run from the repository root with `.venv/bin/python`.
+All commands run from the repository root with `uv run`.
 
 ```sh
-.venv/bin/python tools/run.py check                 # layer 1 + Pilot gate
-.venv/bin/python tools/run.py bounds                # layer 2 analytic bounds
-.venv/bin/python tools/run.py simulate --scenario baseSteady --replications 10
-.venv/bin/python tools/run.py verify                # all layers, JUnit
-.venv/bin/python tools/run.py plots                 # build/plots/*.png, *.svg
-.venv/bin/python tools/run.py animate --scenario baseSteady --video build/media/x.mp4 --horizon-h 1
-.venv/bin/python tools/run.py animate --scenario baseSteady --live   # needs a display
+uv run python tools/run.py check                 # layer 1 + Pilot gate
+uv run python tools/run.py bounds                # layer 2 analytic bounds
+uv run python tools/run.py simulate --scenario baseSteady --replications 10
+uv run python tools/run.py verify                # all layers, JUnit
+uv run python tools/run.py plots                 # build/plots/*.png, *.svg
+uv run python tools/run.py animate --scenario baseSteady --video build/media/x.mp4 --horizon-h 1
+uv run python tools/run.py animate --scenario baseSteady --live   # needs a display
 ```
 
 Scenarios: `baseBatch` (24 samples at shift start), `baseSteady` (12 per
 hour, 10% STAT), `highThroughput` (three thermal blocks, two imagers).
 
-Tests: `.venv/bin/python -m pytest` (generator and fixture tests).
+Tests: `uv run --extra dev pytest` (generator and fixture tests).
 
 Outputs: `build/` (plots, animation, StrictDoc HTML) is git-ignored. The
 JUnit results go to `reports/junit/`, which is deliberately not ignored by
@@ -73,7 +73,7 @@ StrictDoc export (test-report page at
 `build/strictdoc/html/halcyon-dpcr-model/reports/junit/`):
 
 ```sh
-.venv/bin/strictdoc export . --output-dir build/strictdoc --config strictdoc_config.py
+uv run strictdoc export . --output-dir build/strictdoc --config strictdoc_config.py
 ```
 
 ## Example output
