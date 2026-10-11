@@ -26,7 +26,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from generator.analytic import capacity_bounds
+from generator.analytic import capacity_bounds, most_likely_path_seconds
 from generator.ir import MetricKind
 from generator.results import (
     conservation_gap,
@@ -73,6 +73,13 @@ def cmd_bounds(context: Context) -> int:
         try:
             bounds = capacity_bounds(context.model, name)
         except TypeError:
+            # A batch scenario has no arrival rate. Its analytic bound is the
+            # most likely path to the first result.
+            seconds = most_likely_path_seconds(context.model, scenario)
+            print(
+                f"{name}: batch, most likely path to first result "
+                f"{seconds / 60:.1f} min"
+            )
             continue
         print(
             f"{name}: offered {bounds.arrival_rate_per_h:.1f}/h, "
@@ -90,7 +97,6 @@ def cmd_bounds(context: Context) -> int:
                 )
             )
         _print_table(rows)
-        del scenario
     return 0
 
 
@@ -190,6 +196,22 @@ def cmd_plots(context: Context) -> int:
     written += plots.scenario_comparison(
         throughput, threshold, out / "scenario-comparison"
     )
+    minutes: dict[str, float] = {}
+    for name in ("baseBatch", "highThroughputBatch"):
+        result = simulate(
+            context.model,
+            name,
+            RunOptions(seed=1, horizon_s=3 * 3600.0),
+        )
+        minutes[name] = (
+            metric_value(result, MetricKind.TIME_TO_FIRST_RESULT) / 60.0
+        )
+    limit = context.model.requirements["SYS-TAT-001"].thresholds[
+        "requiredTimeToFirstResult"
+    ]
+    written += plots.first_result_comparison(
+        minutes, limit / 60.0, out / "first-result-comparison"
+    )
     for path in written:
         print(path.relative_to(REPO_ROOT))
     return 0
@@ -206,7 +228,11 @@ def cmd_animate(context: Context, args: argparse.Namespace) -> int:
         animator = Animator(video=video, gif=video.suffix == ".gif")
     options = RunOptions(
         seed=args.seed,
-        horizon_s=args.horizon_h * 3600.0,
+        horizon_s=(
+            args.horizon_min * 60.0
+            if args.horizon_min is not None
+            else args.horizon_h * 3600.0
+        ),
         animator=animator,
         blind_animation=not args.live,
     )
@@ -248,6 +274,7 @@ def main(argv: list[str] | None = None) -> int:
     mode = animate.add_mutually_exclusive_group(required=True)
     mode.add_argument("--video", help="output .mp4 or .gif, headless")
     mode.add_argument("--live", action="store_true", help="desktop window")
+    animate.add_argument("--horizon-min", type=float, default=None)
     animate.add_argument("--horizon-h", type=float, default=1.0)
     animate.add_argument("--seed", type=int, default=1)
     args = parser.parse_args(argv)

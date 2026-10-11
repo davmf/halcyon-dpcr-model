@@ -222,3 +222,48 @@ def scenario_comparison(
     )
     figure.tight_layout()
     return _save(figure, path)
+
+
+def first_result_comparison(
+    minutes: dict[str, float],
+    threshold_minutes: float,
+    path: Path,
+) -> list[Path]:
+    """Time to the first result per batch scenario, with the limit as a line."""
+    names = list(minutes)
+    figure, axes = plt.subplots(figsize=(8, 4))
+    _style(axes)
+    axes.grid(axis="x", visible=False)
+    axes.grid(axis="y", color=GRID, linewidth=0.8)
+    bars = axes.bar(
+        names,
+        [minutes[name] for name in names],
+        width=0.55,
+        color=SERIES_BLUE,
+    )
+    for bar, name in zip(bars, names):
+        axes.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 2,
+            f"{minutes[name]:.0f} min",
+            ha="center",
+            fontsize=9,
+            color=TEXT_PRIMARY,
+        )
+    axes.axhline(threshold_minutes, color=NEUTRAL, linestyle="--", linewidth=1)
+    axes.text(
+        len(names) - 0.5,
+        threshold_minutes + 2,
+        f"SYS-TAT-001: {threshold_minutes:.0f} min",
+        ha="right",
+        fontsize=8,
+        color=TEXT_SECONDARY,
+    )
+    axes.set_ylabel(
+        "minutes from batch load to first result", color=TEXT_SECONDARY
+    )
+    axes.set_title(
+        "Time to first result, batch of 24", color=TEXT_PRIMARY, loc="left"
+    )
+    figure.tight_layout()
+    return _save(figure, path)
