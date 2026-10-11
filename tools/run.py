@@ -161,6 +161,39 @@ def cmd_verify(context: Context) -> int:
     return 0 if failed == 0 else 1
 
 
+def cmd_plots(context: Context) -> int:
+    from generator import plots
+    from generator.results import metric_value
+    from generator.salabim_backend import RunOptions, simulate
+
+    out = REPO_ROOT / "build" / "plots"
+    traced = simulate(
+        context.model,
+        "baseSteady",
+        RunOptions(seed=1, horizon_s=8 * 3600.0, record_trace=True),
+    )
+    written = plots.gantt_chart(traced, out / "gantt-baseSteady")
+    written += plots.utilisation_bars(traced, out / "utilisation-baseSteady")
+    written += plots.turnaround_histogram(traced, out / "turnaround-baseSteady")
+    throughput: dict[str, float] = {}
+    for name in ("baseSteady", "highThroughput"):
+        result = simulate(
+            context.model,
+            name,
+            RunOptions(seed=1, horizon_s=8 * 3600.0),
+        )
+        throughput[name] = metric_value(result, MetricKind.COMPLETED_PER_SHIFT)
+    threshold = context.model.requirements["SYS-THR-001"].thresholds[
+        "requiredSamplesPerShift"
+    ]
+    written += plots.scenario_comparison(
+        throughput, threshold, out / "scenario-comparison"
+    )
+    for path in written:
+        print(path.relative_to(REPO_ROOT))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -171,6 +204,7 @@ def main(argv: list[str] | None = None) -> int:
     simulate.add_argument("--replications", type=int, default=5)
     simulate.add_argument("--horizon-h", type=float, default=8.0)
     sub.add_parser("verify")
+    sub.add_parser("plots")
     args = parser.parse_args(argv)
     context = Context(MODEL_DIR)
     if args.command == "check":
@@ -181,6 +215,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_simulate(context, args)
     if args.command == "verify":
         return cmd_verify(context)
+    if args.command == "plots":
+        return cmd_plots(context)
     raise AssertionError(args.command)
 
 
