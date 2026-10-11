@@ -81,3 +81,15 @@ SYS requirement through the marker.
   the hand-calculated single-sample path, and utilisation against layer 2.
 
 A requirement passes only if its constraint holds on the confidence bound.
+
+Sensitivity (layer 3): each simulated check is also run with every step
+duration scaled by 0.8 and 1.2, with 5 replications each. The JUnit
+properties of the check show where the margin appears:
+
+- `MARGIN`: the relative margin of the nominal run, (bound - threshold) /
+  threshold, positive when the requirement holds.
+- `SENS_MINUS20_MEAN`, `SENS_PLUS20_MEAN`: the mean metric at each scale.
+- `SENS_MINUS20_MARGIN`, `SENS_PLUS20_MARGIN`: the margin at each scale.
+
+StrictDoc shows these as fields of the test result in the test-report page
+(`reports/junit/`), next to the PASS/FAIL status and the REQUIREMENT UID.
