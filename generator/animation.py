@@ -31,13 +31,19 @@ HEIGHT = 760
 TITLE_H = 60
 PANEL_X = 880
 COLUMNS = 3
-BOX_W = 250
-BOX_H = 120
-BOX_GAP_X = 30
-BOX_GAP_Y = 40
+BOX_W = 230
+BOX_H = 120  # boxes shrink below this to fit the grid
+BOX_GAP_X = 24
+BOX_GAP_Y = 24
 STAGE_X = 40
 STAGE_TOP = HEIGHT - TITLE_H - 60
+GRID_BOTTOM = 186.0  # the caption is drawn below the grid
 POLL_S = 10.0
+ENTRY_XY = (STAGE_X + 8.0, STAGE_TOP + 16.0)  # where cartridges arrive
+SINK_XY = (STAGE_X + 2 * (BOX_W + BOX_GAP_X) + BOX_W + 26.0, STAGE_TOP - 48.0)
+CAPTION_TOP = 150.0
+CAPTION_LINES = 5
+BAR_STEP = 30  # vertical spacing of the utilisation bars
 DEFAULT_SPEED = 60.0  # simulated seconds per wall-clock second
 VIDEO_FPS = 25
 GIF_FPS = 4
@@ -51,6 +57,17 @@ WAITING = "#eb6834"
 ROUTINE_DOT = "#52514e"
 STAT_DOT = "#1baf7a"
 BAR_TRACK = "#e4e3df"
+
+READING_NOTES = (
+    "A dot sits on the box of the resource it",
+    "is using or waiting for.",
+    "Box: grey idle, blue busy, orange = queue.",
+    "STAT (aqua) goes ahead of routine (dark)",
+    "in every queue.",
+    "Batch: waits until full (fill n/N), then runs.",
+    "Stock: consumables, reordered when low.",
+    "Retest: failed runs repeat, then invalid.",
+)
 
 
 def workflow_order(model: ir.Model, scenario: ir.Scenario) -> list[str]:
@@ -140,6 +157,8 @@ class Animator:
         env.animation_parameters(**options)  # type: ignore[arg-type]
         self._title()
         self._stages()
+        self._ends()
+        self._caption()
         self._panel()
         _Poller(animator=self, engine=engine, drawing_env=env)
 
@@ -168,16 +187,22 @@ class Animator:
         model = engine.model  # type: ignore[attr-defined]
         scenario = engine.scenario  # type: ignore[attr-defined]
         pools = engine.pools  # type: ignore[attr-defined]
-        for index, name in enumerate(workflow_order(model, scenario)):
+        order = workflow_order(model, scenario)
+        rows = (len(order) + COLUMNS - 1) // COLUMNS
+        box_h = min(
+            BOX_H, (STAGE_TOP - GRID_BOTTOM - (rows - 1) * BOX_GAP_Y) / rows
+        )
+        for index, name in enumerate(order):
             column = index % COLUMNS
             row = index // COLUMNS
             x = STAGE_X + column * (BOX_W + BOX_GAP_X)
-            top = STAGE_TOP - row * (BOX_H + BOX_GAP_Y)
-            y = top - BOX_H
-            self.centres[name] = (x + BOX_W / 2, y + BOX_H / 2)
+            top = STAGE_TOP - row * (box_h + BOX_GAP_Y)
+            y = top - box_h
+            # Dots sit above the step text, below the name.
+            self.centres[name] = (x + BOX_W / 2, y + box_h * 0.6)
             pool = pools[name]
             sim.AnimateRectangle(
-                spec=(x, y, x + BOX_W, y + BOX_H),
+                spec=(x, y, x + BOX_W, y + box_h),
                 fillcolor=lambda pool=pool: _state_colour(pool),
                 linecolor=TEXT_SECONDARY,
                 env=self.env,
@@ -198,6 +223,56 @@ class Animator:
                 textcolor=TEXT_SECONDARY,
                 env=self.env,
             )
+            sim.AnimateText(
+                text=lambda name=name: _step_text(engine, name),
+                x=x + 10,
+                y=y + 32,
+                fontsize=12,
+                textcolor=TEXT,
+                env=self.env,
+            )
+
+    def _ends(self) -> None:
+        env = self.env
+        assert env is not None
+        sim.AnimateText(
+            text="arrivals",
+            x=ENTRY_XY[0] + 12,
+            y=ENTRY_XY[1] - 5,
+            fontsize=12,
+            textcolor=TEXT_SECONDARY,
+            env=env,
+        )
+        sim.AnimateText(
+            text="finished",
+            x=SINK_XY[0] - 10,
+            y=SINK_XY[1] - 24,
+            fontsize=12,
+            textcolor=TEXT_SECONDARY,
+            env=env,
+        )
+
+    def _caption(self) -> None:
+        engine = self.engine
+        env = self.env
+        assert engine is not None and env is not None
+        sim.AnimateText(
+            text="What is happening (newest first)",
+            x=STAGE_X,
+            y=CAPTION_TOP,
+            fontsize=14,
+            textcolor=TEXT,
+            env=env,
+        )
+        for row in range(CAPTION_LINES):
+            sim.AnimateText(
+                text=lambda row=row: _log_line(engine, row),
+                x=STAGE_X,
+                y=CAPTION_TOP - 22 - row * 18,
+                fontsize=12,
+                textcolor=TEXT_SECONDARY,
+                env=env,
+            )
 
     def _panel(self) -> None:
         engine = self.engine
@@ -206,7 +281,7 @@ class Animator:
         pools = engine.pools  # type: ignore[attr-defined]
         y = HEIGHT - TITLE_H - 30
         sim.AnimateText(
-            text="Legend",
+            text="Legend (each dot is one cartridge)",
             x=PANEL_X,
             y=y,
             fontsize=15,
@@ -221,7 +296,7 @@ class Animator:
             (STAT_DOT, "dot STAT sample"),
         ]
         for offset, (colour, text) in enumerate(legend):
-            row_y = y - 26 - offset * 22
+            row_y = y - 26 - offset * 20
             sim.AnimateRectangle(
                 spec=(PANEL_X, row_y - 6, PANEL_X + 14, row_y + 8),
                 fillcolor=colour,
@@ -236,7 +311,7 @@ class Animator:
                 textcolor=TEXT_SECONDARY,
                 env=env,
             )
-        clock_y = y - 26 - len(legend) * 22 - 30
+        clock_y = y - 26 - len(legend) * 20 - 30
         sim.AnimateText(
             text=lambda: _clock_text(env),
             x=PANEL_X,
@@ -272,9 +347,9 @@ class Animator:
             if pools[name].spec.kind is not ResourceKind.STORE
         ]
         for index, name in enumerate(names):
-            row_y = bar_top - index * 44
+            row_y = bar_top - index * BAR_STEP
             sim.AnimateRectangle(
-                spec=(PANEL_X, row_y - 8, PANEL_X + bar_width, row_y + 8),
+                spec=(PANEL_X, row_y - 7, PANEL_X + bar_width, row_y + 7),
                 fillcolor=BAR_TRACK,
                 linecolor=BAR_TRACK,
                 env=env,
@@ -283,9 +358,9 @@ class Animator:
             sim.AnimateRectangle(
                 spec=lambda pool=pool, row_y=row_y: (
                     PANEL_X,
-                    row_y - 8,
+                    row_y - 7,
                     PANEL_X + bar_width * _utilisation_now(pool),
-                    row_y + 8,
+                    row_y + 7,
                 ),
                 fillcolor=BUSY,
                 linecolor=BUSY,
@@ -297,7 +372,25 @@ class Animator:
                     f"queue {_queue_now(pool)}"
                 ),
                 x=PANEL_X,
-                y=row_y + 14,
+                y=row_y + 11,
+                fontsize=11,
+                textcolor=TEXT_SECONDARY,
+                env=env,
+            )
+        notes_y = bar_top - len(names) * BAR_STEP - 16
+        sim.AnimateText(
+            text="How to read it",
+            x=PANEL_X,
+            y=notes_y,
+            fontsize=14,
+            textcolor=TEXT,
+            env=env,
+        )
+        for index, line in enumerate(READING_NOTES):
+            sim.AnimateText(
+                text=line,
+                x=PANEL_X,
+                y=notes_y - 22 - index * 13,
                 fontsize=11,
                 textcolor=TEXT_SECONDARY,
                 env=env,
@@ -332,14 +425,17 @@ class _Poller(sim.Component):
 
 
 def _place(animator: Animator, sample: object) -> None:
+    offset = (sample.sample_id % 7 - 3) * 14.0  # type: ignore[attr-defined]
     if sample.outcome is not None:  # type: ignore[attr-defined]
-        # Finished samples leave the picture; the completed count keeps them.
-        sample.anim_position = (-100.0, -100.0)  # type: ignore[attr-defined]
+        # Finished samples stack at the sink; the completed count keeps them.
+        sample.anim_position = (  # type: ignore[attr-defined]
+            SINK_XY[0] + offset,
+            SINK_XY[1],
+        )
         return
     current = getattr(sample, "current", ())
     if current and current[0] in animator.centres:
         centre_x, centre_y = animator.centres[current[0]]
-        offset = (sample.sample_id % 7 - 3) * 14.0  # type: ignore[attr-defined]
         sample.anim_position = (  # type: ignore[attr-defined]
             centre_x + offset,
             centre_y,
@@ -347,7 +443,7 @@ def _place(animator: Animator, sample: object) -> None:
 
 
 def _draw_dot(sample: object, env: sim.Environment) -> None:
-    sample.anim_position = (STAGE_X - 14.0, 60.0)  # type: ignore[attr-defined]
+    sample.anim_position = ENTRY_XY  # type: ignore[attr-defined]
     sim.AnimateCircle(
         radius=6,
         x=lambda: sample.anim_position[0],  # type: ignore[attr-defined]
@@ -410,7 +506,27 @@ def _pool_text(pool: object) -> str:
             f"fill {min(members, spec.batch_size)}/{spec.batch_size}  "
             f"units busy {_busy_units(pool)}/{int(spec.capacity)}"
         )
-    return f"busy {_busy_units(pool)}/{int(spec.capacity)}"
+    return (
+        f"busy {_busy_units(pool)}/{int(spec.capacity)}  "
+        f"queue {_queue_now(pool)}"
+    )
+
+
+def _step_text(engine: object, name: str) -> str:
+    """The step of the first live cartridge that holds or wants this resource."""
+    for sample in engine.samples:  # type: ignore[attr-defined]
+        if sample.outcome is None and name in sample.current:  # type: ignore[attr-defined]
+            return f"step: {sample.step}"  # type: ignore[attr-defined]
+    return ""
+
+
+def _log_line(engine: object, row: int) -> str:
+    """Row `row` of the caption, newest event first."""
+    recent = list(engine.log)[::-1]  # type: ignore[attr-defined]
+    if row >= len(recent):
+        return ""
+    time_s, text = recent[row]
+    return f"{_hms(time_s)}  {text}"
 
 
 def _completed(engine: object) -> int:
@@ -422,6 +538,10 @@ def _completed(engine: object) -> int:
 
 
 def _clock_text(env: sim.Environment) -> str:
-    hours, rest = divmod(int(env.now()), 3600)
-    minutes, seconds = divmod(rest, 60)
-    return f"clock {hours:02d}:{minutes:02d}:{seconds:02d}"
+    return f"clock {_hms(env.now())}"
+
+
+def _hms(seconds: float) -> str:
+    hours, rest = divmod(int(seconds), 3600)
+    minutes, secs = divmod(rest, 60)
+    return f"{hours:02d}:{minutes:02d}:{secs:02d}"

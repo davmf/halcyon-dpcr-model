@@ -25,6 +25,7 @@ seed gives one result. Nothing here reads the model files.
 
 import math
 import random
+from collections import deque
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
@@ -74,6 +75,10 @@ class RunOptions:
     blind_animation: bool = True
 
 
+# Recent event lines kept for the animation caption.
+LOG_LINES = 40
+
+
 class _Pool:
     """A resource of the scenario, with its Salabim objects."""
 
@@ -119,6 +124,7 @@ class _Engine:
         self.samples: list[_Sample] = []
         self.busy: list[BusyInterval] = []
         self.trace: list[TraceEvent] = []
+        self.log: deque[tuple[float, str]] = deque(maxlen=LOG_LINES)
         self.arrivals_total = 0
         self.counters: dict[str, int] = {
             "tokens_started": 0,
@@ -225,11 +231,17 @@ class _Sample(sim.Component):
         self.work_priority = work_priority
         self.arrival_s = self.env.now()
         self.current: tuple[str, ...] = ()
+        self.step: str | None = None
         self.attributes: dict[str, float] = {"invalid": 0.0}
         self.runs = 0
         self.retests = 0
         self.finish_s: float | None = None
         self.outcome: str | None = None
+        self.note("arrives as STAT" if work_priority > 0 else "arrives")
+
+    def note(self, text: str) -> None:
+        """Add one line to the engine's event log, for the animation."""
+        self.engine.log.append((self.env.now(), f"#{self.sample_id} {text}"))
 
     def process(self) -> None:
         max_retests = self.engine.scenario.max_retests
@@ -248,8 +260,10 @@ class _Sample(sim.Component):
             # reportable result, so the sample is INVALID (SimLib outcome rule).
             if run.retest_requested:
                 self.outcome = Outcome.INVALID
+                self.note("leaves as invalid")
             else:
                 self.outcome = Outcome.REPORTED
+                self.note("leaves reported")
             return
 
 
@@ -318,11 +332,16 @@ class _Token(sim.Component):
             )
         enqueued_at = self.env.now()
         sample.current = tuple(step.allocations)
+        sample.step = step.name
         if batches:
             self._enqueue_batch(batches[0], step)
         elif units:
             priority = -sample.work_priority
+            names = ", ".join(p.spec.name for p in units)
+            if any(p.resource.available_quantity() < 1 for p in units):
+                sample.note(f"waits for {names}")
             self.request(*[(p.resource, 1, priority) for p in units])
+            sample.note(f"starts {step.name} on {names}")
             start = self.env.now()
             self.hold(engine.sample_duration(step.duration))
             self.release(*[p.resource for p in units])
@@ -333,6 +352,7 @@ class _Token(sim.Component):
                     )
                 )
         else:
+            sample.note(f"starts {step.name}")
             self.hold(engine.sample_duration(step.duration))
         sample.current = ()
         if engine.options.record_trace:
@@ -371,6 +391,11 @@ class _Token(sim.Component):
         pool.arrived.set(True)
         if len(pool.waiting) >= pool.spec.batch_size:
             pool.full.set(True)
+        self.owner.sample.note(
+            f"joins batch {pool.spec.name} "
+            f"({min(len(pool.waiting), pool.spec.batch_size)}/"
+            f"{pool.spec.batch_size})"
+        )
         self.wait(self.batch_done)
 
 
