@@ -172,7 +172,14 @@ def run_module(
                 passed=passed,
                 message=message,
                 seconds=time.perf_counter() - started,
-                properties=dict(context.properties),
+                properties={
+                    **(
+                        {"REQUIREMENT": _uid_of(function)}
+                        if _uid_of(function)
+                        else {}
+                    ),
+                    **context.properties,
+                },
             )
         )
     return results

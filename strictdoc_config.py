@@ -11,6 +11,6 @@ def create_config() -> ProjectConfig:
         # Link JUnit results (build/results) to requirements through the
         # @relation markers in verification/*.py.
         project_features=["REQUIREMENT_TO_SOURCE_TRACEABILITY"],
-        include_doc_paths=["/model/**", "/build/results/**"],
+        include_doc_paths=["/model/**", "/reports/**"],
         source_root_path=".",
     )
