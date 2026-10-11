@@ -26,6 +26,7 @@ package HalcyonAllocation {
         part generators : DropletGenerator;
         part blocks : ThermalBlock;
         part imagers : FluorescenceImager;
+        part analysisComputer : AnalysisComputer;
         part reagentStore : ReagentStore;
         part wasteStore : WasteStore;
         part cartridge : Cartridge;
@@ -77,6 +78,7 @@ package HalcyonAllocation {
         allocate sampleProcedure.amplification.transferToReadout to shuttle;
 
         allocate sampleProcedure.readout.imaging to imagers;
+        allocate sampleProcedure.readout.poissonAnalysis to analysisComputer;
         allocate sampleProcedure.readout.transferToWaste to shuttle;
     }
 }

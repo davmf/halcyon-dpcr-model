@@ -89,6 +89,10 @@ package HalcyonHardware {
         attribute timePerChannel : DurationValue = 45 [s];
     }
 
+    part def AnalysisComputer :> Resource {
+        doc /* Computes Poisson copy numbers from the four channel images. One unit. */
+    }
+
     part def <'HW-REA'> ReagentStore :> Store {
         doc /* Master mix reagent cartridges. Refilled from the reorder level. */
         attribute :>> initialLevel = 100;
