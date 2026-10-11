@@ -86,6 +86,18 @@ Developer Guide and the files in this repository and in the StrictDoc branch
   shared stations and shuttle). The capacity note's 85 min assumes no
   queueing.
 
+## Final verify (after the model fixes, 2026-10-11)
+
+- 43 checks: layer 1 17/17 pass; layer 2 9/10 pass (SYS-THR-001 base
+  steady bound 82.5 < 96); layer 3 3/10 pass (UTL x2, VAL-001); layer 4 6/6.
+- Layer 3 (95% CI bound vs threshold): THR-001 base 67.7 and HT 71.8 vs 96;
+  TAT-001 base and HT batch 9176 s (153 min) vs 5400 s; TAT-002 base 12545 s
+  and HT 10430 s (upper bound; HT mean 8853 s) vs 9000 s; TAT-003 8593 s vs
+  7200 s. UTL-001 base 0.456 and HT 0.247 vs 0.85.
+- Invalid rate at nominal: 0 of the simulated samples (CI [0, 0]); the analytic
+  rate is 1.2e-5. The stressed run (pLowDroplets 0.5) gives 14 of 296 (4.7%)
+  against an analytic 6.3%.
+
 ## Model gaps: status (2026-10-11, after the model fixes)
 
 1. Invalid marking. Resolved in the model: the invalid draw is a Bernoulli
