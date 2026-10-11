@@ -195,7 +195,7 @@ The generator must not contain Halcyon-specific code. Version 1 shape,
 | `MetricKind` | enum | `completedPerShift`, `timeToFirstResult`, `meanTurnaround`, `meanStatTurnaround`, `invalidRate`, `utilisation`. |
 | `Bernoulli` | calc def | `in p : Probability`, `return : Boolean`. A random draw. |
 | `Resource` | abstract part def | `capacity : Natural default 1`. The number of identical units. A unit is seized FIFO within equal priority. |
-| `BatchResource` | abstract part def `:> Resource` | `batchSize : Natural default 1`, `batchTimeout : DurationValue default 0 [s]`. A batch starts when `batchSize` items wait, or when `batchTimeout` has passed since the first waiting item arrived. Each batch takes up to `batchSize` items. Units run batches in parallel. |
+| `BatchResource` | abstract part def `:> Resource` | `batchSize : Natural default 1`, `batchTimeout : DurationValue default 0 [s]`. A batch starts when a unit is free and either `batchSize` items wait, or the oldest waiting item has waited `batchTimeout`. Each batch takes up to `batchSize` items. Units run batches in parallel. |
 | `Store` | abstract part def | `initialLevel`, `reorderLevel`, `refillSize : Natural default 0`, `refillDuration : DurationValue default 0 [s]`. Level falls when a step allocated to the store starts with `consumes > 0`. At or below `reorderLevel`, one refill of `refillSize` arrives after `refillDuration`. One refill at a time. |
 | `WorkItem` | abstract item def | `priority : Natural default 0`. Higher first in every queue. STAT is 1. |
 | `Step` | action def | `distribution : DistributionKind default fixed`. `nominal`: the fixed value, the triangular mode, the normal mean, or the log-normal median. A calc invocation in `nominal` gives a fixed value. `low`, `high`: triangular bounds. `sd : DurationValue`: normal standard deviation. `sigma : Real`: log-normal shape (sd of ln duration). `consumes : Natural default 0`. `retest : Boolean default false`. |
@@ -225,6 +225,15 @@ Generator rules:
 - Retest. A step with `retest = true` ends the run. It adds one new run of the
   same item, if the item has fewer than `maxRetests` retests. The new run
   starts from the top of the procedure.
+- Outcome (decided 2026-10-11). A run that ends in a retest step with no
+  retests left has no reportable result, so the sample is INVALID. The
+  outcome is never ABORTED. Reported samples are REPORTED. The rule for
+  invalid results is therefore: any path that gives no reportable result
+  is INVALID, including an aborted cartridge and a partition that fails
+  both droplet checks. Current generator: this rule is not yet
+  implemented. `salabim_backend.py` gives INVALID only when the item's
+  `invalid` flag is set, and the model cannot set that flag (see the
+  change log). Change the backend to INVALID on exhausted retests.
 - Priority. Queues order by `WorkItem::priority` (higher first), then by
   arrival time.
 - Verification. For `SimulationVerification`, run `replications` runs of
@@ -269,3 +278,25 @@ Each entry gives the date, what changed, and why.
   construct is used.
 - 2026-10-11, short names: short names are allowed on definitions, for
   example `part def <'HW-CART'> Cartridge`.
+- 2026-10-11, invalid results: the invalid draw is a `Bernoulli` guard at the
+  readout, with probability `pLowDroplets * pLowDroplets`. Setting
+  `sample.invalid` from SysML needs two upstream changes that are not
+  available. The StrictDoc grammar has no assignment rule, so `assign` is
+  read as an opaque member, which the parser check forbids. The loader
+  hard-codes `assignments=()`. The `invalid` item attribute was removed, and
+  the second droplet check moved to the readout draw. The count of invalid
+  results is the same. The regeneration time of invalid partitions is
+  independent of invalidity, a negligible difference (0.09% x 167 s).
+- 2026-10-11, outcome rule: a run that ends in an exhausted retest is
+  INVALID (see the generator rules). The backend change is required.
+- 2026-10-11, batch timeout: the batch timeout runs from the oldest waiting
+  item, and a batch starts only when a unit is free. The SimLib docs and the
+  backend say the same thing now. No change in behaviour.
+- 2026-10-11, analysis: `poissonAnalysis` is allocated to a new
+  `AnalysisComputer` (one unit, in the configuration).
+- 2026-10-11, units: SYS-OPS-001 `observed` is in seconds (`/ 12 [1/h]`),
+  matching the 8 h threshold in SI.
+- 2026-10-11, scenarios: `HighThroughputBatch` (three blocks, two imagers,
+  batch of 24 at shift start) for SYS-TAT-001 in the high-throughput
+  configuration. Verification cases VER-THR-001-HT, VER-UTL-001-HT,
+  VER-TAT-001-HT, VER-TAT-002-HT use short names.

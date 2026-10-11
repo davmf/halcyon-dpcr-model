@@ -28,6 +28,7 @@ cartridge, reflex retests excluded (about 0.001% of samples).
 | Droplet generators (2) | 202 s | 2 | 17.8 each, 35.7 in total |
 | Thermal block (4 cartridges per run) | 2,800 s per run | 2 or 3 | 5.14 each (4 cartridges per 46.7 min) |
 | Imager (1 or 2) | 180 s | 1 or 2 | 20.0 each |
+| Analysis computer (1) | 60 s | 1 | 60.0 |
 
 The station figure is the sum of pipetting (60 s), lysis (360 s), bead
 binding (180 s), two washes (2 x 150 s, including 20 s gantry dispense),
@@ -48,6 +49,7 @@ arrival rate.
 | Pneumatic controllers | 39% | 39% | 39% |
 | Droplet generators | 34% | 34% | 34% |
 | Imager | 60% (1 imager) | 51% | 30% (2 imagers) |
+| Analysis computer | 20% | 20% | 20% |
 
 Maximum sustainable throughput:
 
@@ -65,11 +67,16 @@ Maximum sustainable throughput:
   a small margin.
 - STAT path with no queueing: 85 min. Limit 2 h (SYS-TAT-003). Passes
   only when the system is not queueing. Under load it fails.
-- Invalid results after one reflex retest: about 1 in 86,000
-  (0.0009 + 0.0025 first-pass invalid rate, squared). Limit 2%
-  (SYS-VAL-001). Passes with a wide margin.
-- Reagent store: 100 units at 12 per hour lasts 8.3 hours. Limit 8 hours
-  (SYS-OPS-001). Passes with a small margin.
+- Invalid results after one retest: about 1 in 86,000. First-pass invalid:
+  0.0009 (partition fails both droplet checks, readout draw) plus 0.0025
+  (aborted cartridge, bubble twice), squared for one retest. Limit 2%
+  (SYS-VAL-001). Passes with a wide margin. Rule: no reportable result is
+  INVALID, so an exhausted abort counts as invalid.
+- High-throughput first result (batch of 24, no queueing): the same
+  85 min, because the first batch uses one thermal block. The simulation
+  adds queueing.
+- Reagent store: 100 units at 12 per hour lasts 8.3 hours (30,000 s in SI).
+  Limit 8 hours (28,800 s, SYS-OPS-001). Passes with a small margin.
 - Imager utilisation at offered 12 per hour: 60%. Limit 85% (SYS-UTL-001).
   Passes.
 
@@ -82,3 +89,7 @@ Maximum sustainable throughput:
   in HighThroughput. Lowering station time would move the bottleneck back
   to the thermal blocks.
 - The waste store has no allocation and no level model in version 1.
+- Base SYS-TAT-001 to SYS-TAT-003 and SYS-THR-001 fail in simulation at
+  nominal load. The simulated first result of the batch (about 150 min) is
+  well above the no-queueing path (85 min). The shuttle and the shared
+  stations queue the first batch. This is a finding, not a fixed defect.

@@ -15,15 +15,15 @@ Implementation.
 | `design/hardware.sysml` | Physical parts (ISA-88 equipment): rack, shuttle, gantry, stations, pneumatics, generators, thermal blocks, imagers, stores, cartridge. | No |
 | `design/workflow.sysml` | ISA-88 procedure: sample procedure, five unit procedures, operations, phases (Steps) and decisions. | No |
 | `design/allocation.sysml` | Abstract `Instrument` (process cell): owns the units, the procedure binding and every `allocate`. | No |
-| `design/scenarios.sysml` | Configurations (`BaseInstrument`, `HighThroughputInstrument`) and scenarios (`BaseBatch`, `BaseSteadyStat`, `HighThroughputSteadyStat`). | No |
-| `design/verification.sysml` | `satisfy` links to every SYS requirement and one verification case per SYS requirement. | No |
+| `design/scenarios.sysml` | Configurations (`BaseInstrument`, `HighThroughputInstrument`) and scenarios (`BaseBatch`, `BaseSteadyStat`, `HighThroughputSteadyStat`, `HighThroughputBatch`). | No |
+| `design/verification.sysml` | `satisfy` links to every SYS requirement, one verification case per SYS requirement, and high-throughput cases (`VER-*-HT`). | No |
 
 ## ISA-88 mapping
 
 | ISA-88 | In this model |
 |---|---|
 | Process cell | `Instrument` (`allocation.sysml`) |
-| Units | Stations, pneumatic controllers, droplet generators, thermal blocks, imagers, and the shared shuttle and gantry |
+| Units | Stations, pneumatic controllers, droplet generators, thermal blocks, imagers, the analysis computer, and the shared shuttle and gantry |
 | Equipment modules | Heater and magnet in a station; the cartridge |
 | Procedure | `SampleProcedure` (`workflow.sysml`) |
 | Unit procedures | `intake`, `extraction`, `partitioning`, `amplification`, `readout` |
