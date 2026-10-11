@@ -5,7 +5,7 @@ package HalcyonScenarios {
      * Base: two thermal blocks, one imager, one batch of 24 at shift start.
      * SteadyStat: base configuration, Poisson arrivals at 12 per hour, 10%
      * STAT. HighThroughput: three thermal blocks, two imagers, same arrivals
-     * as SteadyStat.
+     * as SteadyStat. HighThroughputBatch: the same units with the base batch.
      */
 
     private import ScalarValues::*;
@@ -77,7 +77,16 @@ package HalcyonScenarios {
         attribute :>> warmUpTime = 1 [h];
     }
 
+    part def HighThroughputBatch :> Scenario {
+        part :>> configuration : HighThroughputInstrument;
+        attribute :>> arrivals : BatchArrival {
+            :>> count = 24;
+            :>> time = 0 [s];
+        }
+    }
+
     part baseBatch : BaseBatch;
     part baseSteady : BaseSteadyStat;
     part highThroughput : HighThroughputSteadyStat;
+    part highThroughputBatch : HighThroughputBatch;
 }
