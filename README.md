@@ -58,6 +58,10 @@ uv run python tools/run.py animate --scenario baseSteady --video build/media/x.m
 uv run python tools/run.py animate --scenario baseSteady --live   # needs a display
 ```
 
+`--speed` sets simulated seconds per wall-clock second for both modes
+(default 60, so one simulated hour takes one minute). Use `--speed 10` for a
+slower live view.
+
 Scenarios: `baseBatch` (24 samples at shift start), `baseSteady` (12 per
 hour, 10% STAT), `highThroughput` (three thermal blocks, two imagers).
 
