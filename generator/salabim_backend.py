@@ -244,9 +244,10 @@ class _Sample(sim.Component):
                 self.engine.counters["retests"] += 1
                 continue
             self.finish_s = self.env.now()
+            # A run that ends in a retest step with no retests left has no
+            # reportable result, so the sample is INVALID (SimLib outcome rule).
             if run.retest_requested:
-                invalid = self.attributes["invalid"] > 0.5
-                self.outcome = Outcome.INVALID if invalid else Outcome.ABORTED
+                self.outcome = Outcome.INVALID
             else:
                 self.outcome = Outcome.REPORTED
             return

@@ -82,3 +82,36 @@ def test_utilisation_is_between_zero_and_one() -> None:
     )
     value = metric_value(result, MetricKind.UTILISATION, "blocks")
     assert 0.0 <= value <= 1.0
+
+
+def test_forced_invalid_draw_gives_invalid_after_one_retest() -> None:
+    """With pLowDroplets = 1 the readout draw is always invalid, so the first
+    run and the one retest both end in reflexRetest. The sample is INVALID.
+    """
+    result = simulate(
+        _single_sample_model(),
+        "single",
+        RunOptions(
+            seed=1,
+            horizon_s=3 * 3600,
+            overrides={"pBubble": 0.0, "pLowDroplets": 1.0},
+        ),
+    )
+    (sample,) = result.samples
+    assert sample.outcome == "invalid"
+    assert sample.runs == 2
+
+
+def test_no_invalid_draw_reports_the_sample() -> None:
+    result = simulate(
+        _single_sample_model(),
+        "single",
+        RunOptions(
+            seed=1,
+            horizon_s=3 * 3600,
+            overrides={"pBubble": 0.0, "pLowDroplets": 0.0},
+        ),
+    )
+    (sample,) = result.samples
+    assert sample.outcome == "reported"
+    assert sample.runs == 1
