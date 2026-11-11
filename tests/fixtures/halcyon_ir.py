@@ -3,7 +3,7 @@ Hand-built IR of the Halcyon dPCR-24 model.
 
 Stand-in for the loader until the StrictDoc parser can read the process
 model (see generator/loader.py). Every value and allocation is copied from
-model/design/*.sysml and model/library/SimLib.sysml. Test-only: the
+the design trackers (model/TRK-*) and model/_library/SimLib.sysml. Test-only: the
 generator itself must not depend on this module.
 
 Updated to the model of 2026-10-11 (invalid draw at readout, analysis
@@ -71,7 +71,7 @@ def _call(function: str, **arguments: Expr) -> Expr:
 
 
 def _calcs() -> dict[str, CalcDef]:
-    """Calc defs of design/physics.sysml, with the model's pi."""
+    """Calc defs of the physics tracker (TRK-PHY), with the model's pi."""
     pi = _lit(3.14159265)
     diameter, length = _ref("diameter"), _ref("length")
     pressure, viscosity = _ref("pressure"), _ref("viscosity")

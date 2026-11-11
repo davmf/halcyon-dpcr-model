@@ -6,17 +6,21 @@ Implementation.
 
 ## Files
 
-| File | Role | Edited in StrictDoc |
-|---|---|---|
-| `library/SimLib.sysml` | Generic simulation vocabulary (resources, steps, arrivals, scenarios, verification). Project independent. | No |
-| `requirements/stakeholder_requirements.sysml` | STK-* needs of the laboratory. | Yes |
-| `requirements/system_requirements.sysml` | SYS-* requirements, derived from STK-* by `dependency`. EARS statements with `require constraint`. | Yes |
-| `design/physics.sysml` | Step physics as `calc def`s: priming (Hagen-Poiseuille), droplet generation, thermal cycling, imaging. | No |
-| `design/hardware.sysml` | Physical parts (ISA-88 equipment): rack, shuttle, gantry, stations, pneumatics, generators, thermal blocks, imagers, stores, cartridge. | No |
-| `design/workflow.sysml` | ISA-88 procedure: sample procedure, five unit procedures, operations, phases (Steps) and decisions. | No |
-| `design/allocation.sysml` | Abstract `Instrument` (process cell): owns the units, the procedure binding and every `allocate`. | No |
-| `design/scenarios.sysml` | Configurations (`BaseInstrument`, `HighThroughputInstrument`) and scenarios (`BaseBatch`, `BaseSteadyStat`, `HighThroughputSteadyStat`, `HighThroughputBatch`). | No |
-| `design/verification.sysml` | `satisfy` links to every SYS requirement, one verification case per SYS requirement, and high-throughput cases (`VER-*-HT`). | No |
+The model uses the tracker layout: one file per item, trackers and folders
+include their children with `public import '<ID>'::*;`. See
+`docs/design/tracker_layout.md`.
+
+| Tracker | Title | Holds | Edited in StrictDoc |
+|---|---|---|---|
+| `_library/` | | `SimLib.sysml` (simulation vocabulary, project independent), `StrictDocWorkspace.sysml` (layout metadata) | No |
+| `TRK-STK/` | Stakeholder requirements | STK-* needs of the laboratory, in folders | Yes |
+| `TRK-SYS/` | System requirements | SYS-* requirements, derived from STK-* by `dependency`; EARS statements with `require constraint` | Yes |
+| `TRK-PHY/` | Physics | Step physics as `calc def`s: priming (Hagen-Poiseuille), droplet generation, thermal cycling, imaging | No |
+| `TRK-HW/` | Hardware | Physical parts (ISA-88 equipment) | No |
+| `TRK-WF/` | Workflow | ISA-88 procedure: `SampleProcedure` (`WF-PROC`) and `Sample` | No |
+| `TRK-AL/` | Allocation | Abstract `Instrument` (`AL-INS`): the units, the procedure binding and every `allocate` | No |
+| `TRK-SC/` | Scenarios | Configurations and scenarios; the `satisfy` links of each SYS requirement are in the scenario usage they name (`baseSteady`, `baseBatch`) | No |
+| `TRK-VER/` | Verification | One verification case per SYS requirement and the high-throughput cases (`VER-*-HT`) | No |
 
 ## ISA-88 mapping
 
@@ -73,7 +77,7 @@ doc /*
  */
 ```
 
-`requirements/_assets/` holds the charts used by SYS-THR-001, SYS-UTL-001
+`TRK-SYS/_assets/` holds the charts used by SYS-THR-001, SYS-UTL-001
 and SYS-TAT-001. They are snapshots of `tools/run.py plots` output. Design
-documents (`design/`) use plain-text markup, so an image directive there
+documents (the design trackers) use plain-text markup, so an image directive there
 would show as text.
