@@ -21,7 +21,8 @@ that StrictDoc links to the SYS requirements.
 - Python 3.15 at `/home/david/.local/bin/python3.15`
 - uv
 - Java 21 for the SysML v2 Pilot Implementation conformance check
-- StrictDoc from branch `david/sysml-format`
+- StrictDoc from branch `david/sysml-plantuml-diagrams` (the model uses the
+  tracker layout: `SysMLFormat(tracker_layout=True)`)
 
 ## Setup
 

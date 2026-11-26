@@ -184,7 +184,7 @@ The ramp rate is a plain `Real` in K/s. The library has no rate type.
 
 ## Simulation library conventions (generator contract)
 
-Library file: `model/library/SimLib.sysml`, package `SimLib`. It is generic.
+Library file: `model/_library/SimLib.sysml`, package `SimLib`. It is generic.
 The generator must not contain Halcyon-specific code. Version 1 shape,
 2026-10-11:
 

@@ -7,7 +7,10 @@ from strictdoc.core.project_config import ProjectConfig
 def create_config() -> ProjectConfig:
     return ProjectConfig(
         project_title="Halcyon dPCR-24",
-        formats=[*ProjectConfig.default_formats(), SysMLFormat()],
+        formats=[
+            *ProjectConfig.default_formats(),
+            SysMLFormat(tracker_layout=True),
+        ],
         # Link JUnit results (build/results) to requirements through the
         # @relation markers in verification/*.py.
         project_features=["REQUIREMENT_TO_SOURCE_TRACEABILITY"],
