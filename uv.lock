@@ -369,7 +369,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "ruff", marker = "extra == 'dev'" },
     { name = "salabim", specifier = "==26.0.8" },
-    { name = "strictdoc", editable = "/home/dxf/strictdoc" },
+    { name = "strictdoc", editable = "../strictdoc" },
     { name = "textx", specifier = ">=4,<5" },
 ]
 provides-extras = ["dev"]
@@ -1219,7 +1219,7 @@ wheels = [
 
 [[package]]
 name = "strictdoc"
-source = { editable = "/home/dxf/strictdoc" }
+source = { editable = "../strictdoc" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "docutils" },

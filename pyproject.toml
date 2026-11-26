@@ -12,7 +12,7 @@ dependencies = [
     "matplotlib",
     "pillow",
     "opencv-python-headless",
-    # Installed editable from the local checkout at /home/dxf/strictdoc, branch david/sysml-format; see README.
+    # Installed editable from a local StrictDoc checkout beside this repo (../strictdoc); see README.
     "strictdoc",
 ]
 
@@ -23,7 +23,7 @@ dev = ["pytest", "ruff"]
 package = false
 
 [tool.uv.sources]
-strictdoc = { path = "/home/dxf/strictdoc", editable = true }
+strictdoc = { path = "../strictdoc", editable = true }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
